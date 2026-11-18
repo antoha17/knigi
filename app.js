@@ -438,7 +438,7 @@ $("#howInstall").onclick = () => Install.show();
 
 /* ---------- запуск ---------- */
 function renderAll(){ $("#profile").value = state.profile; renderList(); renderNews(); }
-$("#surprise").innerHTML = IC("dice");
+$("#surprise").innerHTML = IC("dice") + "<span>Удиви</span>";
 $("#addTitle").insertAdjacentHTML("afterbegin", IC("plus"));
 $("#tasteTitle").insertAdjacentHTML("afterbegin", IC("target"));
 $("#tasteTitle").insertAdjacentHTML("beforeend", ARR);

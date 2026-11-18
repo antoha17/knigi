@@ -101,7 +101,11 @@ textarea{min-height:110px;resize:vertical}
 .hidden{display:none!important}
 .quick{display:flex;gap:8px}
 #surprise .ic{width:22px;height:22px}
-#surprise{display:flex;align-items:center;justify-content:center}
+#surprise{display:flex;align-items:center;justify-content:center;gap:7px;padding:15px 16px;white-space:nowrap}
+#surprise .ic{color:var(--accent)}
+#go{white-space:nowrap}
+@media (max-width:389px){.btns .btn{font-size:15px;padding:14px 12px}}
+@media (max-width:340px){.go-more{display:none}}
 .newshead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
 .newshead h2{font:700 17px Manrope,system-ui,sans-serif;display:flex;align-items:center;gap:8px}
 .newshead h2 .ic{width:19px;height:19px;color:var(--accent)}
@@ -202,8 +206,8 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
     <input id="similar" placeholder="Например: «Код да Винчи» или Дэн Браун" autocomplete="off">
 
     <div class="btns">
-      <button class="btn main" id="go">Подобрать 3 варианта</button>
-      <button class="btn ghost" id="surprise" title="Удиви меня: один неожиданный вариант" aria-label="Удиви меня"></button>
+      <button class="btn main" id="go">Подобрать<span class="go-more"> 3 варианта</span></button>
+      <button class="btn ghost" id="surprise" title="Удиви меня: один неожиданный вариант"></button>
     </div>
 
     <div id="results"></div>
