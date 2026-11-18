@@ -291,6 +291,8 @@ $("#results").addEventListener("click",onAct);
 $("#news").addEventListener("click",onAct);
 
 /* ---------- мой список ---------- */
+const EMPTY = {"watching": "Отметьте книгу «Читаю» — здесь будет прогресс в процентах", "liked": "Здесь будут книги, которые зашли", "disliked": "Здесь будет то, что не зашло — такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
+
 function renderList(){
   const later = state.items.filter(i=>i.verdict==="later").length;
   $("#laterCnt").textContent = later?later:"";
@@ -303,9 +305,10 @@ function renderList(){
   const open = k => openGroups.has(k)?"open":"";
   $("#lists").innerHTML = groups.map(([k,name])=>{
     const arr = state.items.filter(i=>i.verdict===k);
-    if(!arr.length && k!=="later") return "";
     let body;
-    if(k==="watching"){
+    if(!arr.length && k!=="later"){
+      body = `<div class="empty">${EMPTY[k]}</div>`;
+    } else if(k==="watching"){
       body = arr.map(i=>`
       <div class="row watch"><div class="top"><div class="t"><b>${esc(i.title)}</b>${(i.author||i.note)?`<div>${esc([i.author,i.note].filter(Boolean).join(" · "))}</div>`:""}</div>
         <div class="mini">${del(i)}</div></div>
