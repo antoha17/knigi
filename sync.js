@@ -12,6 +12,14 @@
 
 const Sync = (() => {
   const SNAP = LS_KEY + ".synced";          // снимок того, что уже на сервере
+  // Код приглашения из ссылки вида …/kino/?invite=abc123: запоминаем и убираем из адресной строки.
+  let invite = null;
+  try{
+    const u = new URL(location.href), c = u.searchParams.get("invite");
+    if(c){ localStorage.setItem("kk-invite", c); u.searchParams.delete("invite"); history.replaceState(null, "", u.pathname + u.search + u.hash); }
+    invite = localStorage.getItem("kk-invite");
+  }catch(e){}
+  let disabled = false;
   let sb = null, session = null;
   let flushTimer = null, flushing = false, again = false, lastPull = 0, status = "";
 
@@ -109,6 +117,8 @@ const Sync = (() => {
   /* ---------- вход по почте и паролю ---------- */
   function errText(e){
     const m = String((e && (e.code || e.message)) || "").toLowerCase();
+    if(m.includes("invite_required")) return "Регистрация только по приглашению. Попросите новую ссылку у того, кто дал приложение";
+    if(m.includes("no_seats")) return "Свободных мест нет. Напишите тому, кто дал вам ссылку";
     if(m.includes("invalid_credentials") || m.includes("invalid login")) return "Неверная почта или пароль";
     if(m.includes("already") || m.includes("user_exists")) return "Такая почта уже зарегистрирована. Нажмите «Войти»";
     if(m.includes("weak") || m.includes("password should") || m.includes("at least")) return "Пароль слишком простой: нужно не меньше 6 символов";
@@ -130,8 +140,9 @@ const Sync = (() => {
     const body = {
       login: `<p>Войдите или создайте аккаунт. Список будет храниться на сервере и будет одинаковым на телефоне и компьютере.</p>${emailInp}${passInp("current-password","Пароль")}
         <div class="btns"><button class="btn main" id="lgGo">Войти</button></div>
-        <div class="lg-links"><button id="lgToSignup">Создать аккаунт</button><button id="lgToReset">Забыли пароль?</button></div>`,
-      signup: `<p>Придумайте пароль: не меньше 6 символов. Приложение запомнит вход, вводить его каждый раз не придётся.</p>${emailInp}${passInp("new-password","Новый пароль")}
+        <div class="lg-links">${invite ? `<button id="lgToSignup">Создать аккаунт</button>` : `<span></span>`}<button id="lgToReset">Забыли пароль?</button></div>
+        ${invite ? "" : `<p class="lg-note">Нет аккаунта? Попросите ссылку-приглашение у того, кто дал вам приложение.</p>`}`,
+      signup: `<p>Вас пригласили! Укажите почту и придумайте пароль: не меньше 6 символов. Один аккаунт подходит для обоих приложений: «Что посмотреть» и «Что почитать».</p>${emailInp}${passInp("new-password","Новый пароль")}
         <div class="btns"><button class="btn main" id="lgGo">Создать аккаунт</button></div>
         <div class="lg-links"><button id="lgToLogin">У меня уже есть аккаунт</button></div>`,
       reset: `<p>Пришлём письмо со ссылкой. Откройте её, задайте новый пароль, потом войдите с ним в приложении.</p>${emailInp}
@@ -172,9 +183,10 @@ const Sync = (() => {
           if(error) throw error;
           close(); toast("Готово, вы вошли"); showTab("pick");
         } else if(mode === "signup"){
-          const {data, error} = await sb.auth.signUp({email: addr, password: pass});
+          const {data, error} = await sb.auth.signUp({email: addr, password: pass, options: {data: {invite: invite || ""}}});
           if(error) throw error;
           if(data && data.user && Array.isArray(data.user.identities) && !data.user.identities.length) throw {code:"user_exists"};
+          try{ localStorage.removeItem("kk-invite"); }catch(e){} invite = null;
           if(!data.session){ busy(false); err("Аккаунт создан, но вход пока не разрешён. Напишите владельцу приложения"); return; }
           close(); toast("Аккаунт создан, вы вошли"); showTab("pick");
         } else if(mode === "reset"){
@@ -204,11 +216,26 @@ const Sync = (() => {
   // Пока человек не вошёл, вместо вкладок показываем экран входа.
   function applyGate(){
     document.body.classList.remove("auth-pending");
-    const gated = ready() && !user();
+    const gated = ready() && (!user() || disabled);
     const was = document.body.classList.contains("gated");
     document.body.classList.toggle("gated", gated);
-    if(gated && !was) showLogin("login", "", true);
+    if(disabled && user()) return showDisabled();
+    if(gated && !was) showLogin(invite ? "signup" : "login", "", true);
     if(!gated) $("#gate").innerHTML = "";
+  }
+  function showDisabled(){
+    document.body.classList.add("gated");
+    $("#gate").innerHTML = `<div class="gate-card"><h3>Доступ отключён</h3><p>Владелец приложения отключил вам доступ. Если это ошибка, напишите ему.</p><div class="btns"><button class="btn ghost" style="flex:1" id="disOut">Выйти</button></div></div>`;
+    $("#disOut").onclick = async () => { try{ await sb.auth.signOut(); }catch(e){} };
+  }
+  // При каждом открытии: отмечаем «заходил», узнаём, не отключён ли доступ и не владелец ли это.
+  async function afterLogin(){
+    try{
+      const {data} = await sb.rpc("touch");
+      if(data === true){ disabled = true; applyGate(); return; }
+      const o = await sb.rpc("is_owner");
+      const link = $("#adminLink"); if(link) link.classList.toggle("hidden", o.data !== true);
+    }catch(e){}
   }
   function renderAccount(){
     const box = $("#account"); if(!box) return;
@@ -226,7 +253,7 @@ const Sync = (() => {
     // если нет — сразу экран входа. Сервер потом только уточнит.
     let stored = false; try{ stored = !!localStorage.getItem("kk-auth"); }catch(e){}
     document.body.classList.toggle("gated", !stored);
-    if(!stored) showLogin("login", "", true);
+    if(!stored) showLogin(invite ? "signup" : "login", "", true);
     document.body.classList.remove("auth-pending");
     sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {
       auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "kk-auth"}
@@ -240,6 +267,8 @@ const Sync = (() => {
         setTimeout(() => showLogin("newpass"), 0);
       }
       if(event === "SIGNED_OUT"){
+        disabled = false; const link = $("#adminLink"); if(link) link.classList.add("hidden");
+        if(window.Admin) Admin.close();
         try{ localStorage.removeItem(SNAP); }catch(e){}
         state.items = []; state.profile = "";
         try{ localStorage.removeItem(LS_KEY); }catch(e){}
@@ -247,7 +276,7 @@ const Sync = (() => {
       }
       renderAccount(); applyGate();
       if(s && (event === "INITIAL_SESSION" || (event === "SIGNED_IN" && was !== s.user.id))){
-        setTimeout(() => pull().catch(() => setStatus("error")), 0);
+        setTimeout(() => { afterLogin(); pull().catch(() => setStatus("error")); }, 0);
       }
     });
     window.addEventListener("online", () => schedule());
@@ -258,7 +287,7 @@ const Sync = (() => {
     renderAccount();
   }
 
-  return {init, schedule, flush, pull, showLogin, token: () => session && session.access_token, user};
+  return {init, schedule, flush, pull, showLogin, token: () => session && session.access_token, user, client: () => sb};
 })();
 window.Sync = Sync;
 window.Auth = {token: () => Sync.token()};

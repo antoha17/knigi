@@ -126,6 +126,7 @@ details.fold[open] summary{margin-bottom:2px}
 details.fold.sec{margin-top:10px}
 .ic{width:18px;height:18px;flex-shrink:0;vertical-align:-3px}
 .foot{margin-top:34px;text-align:center;font-size:13px;color:var(--muted)}
+body.admin-open #adminLink{display:none}
 .foot button{background:none;border:0;color:var(--later);font:inherit;cursor:pointer;padding:6px}
 /* вход и синхронизация */
 .acc-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:12px;font-size:14px;color:var(--muted)}
@@ -147,6 +148,41 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 .gate-card p{color:var(--muted);font-size:14px;margin-top:8px}
 .lg-err{color:var(--bad)!important;margin-top:10px!important}
 .lg-err:empty{display:none}
+.lg-note{font-size:13px!important;margin-top:14px!important}
+/* страница «Статистика» (только владелец) */
+#admin{display:none}
+body.admin-open #admin{display:block}
+body.admin-open #main,body.admin-open #gate{display:none!important}
+.adm-head{display:flex;align-items:center;gap:10px;margin:18px 0 6px}
+.adm-head h2{font-family:Unbounded,sans-serif;font-weight:500;font-size:21px}
+.adm-head button{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.adm-head button .ic{transform:rotate(90deg);width:20px;height:20px}
+.adm-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px}
+.adm-card h3{font:700 15px Manrope,system-ui,sans-serif}
+.adm-card h3 small{color:var(--muted);font-weight:500;margin-left:4px}
+.adm-note{color:var(--muted);font-size:13px;margin-top:8px}
+.adm-soon{text-align:center;margin:18px 8px 0}
+.adm-seats{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.adm-seats b{font-family:Unbounded,sans-serif;font-weight:500;font-size:24px;display:block}
+.adm-seats span{color:var(--muted);font-size:13px}
+.adm-step{display:flex;gap:8px}
+.adm-step button{width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:600 22px Manrope,system-ui,sans-serif;cursor:pointer}
+.adm-link{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:10px}
+.adm-link div{flex:1;min-width:0}
+.adm-link b{font-size:14px;display:block}
+.adm-link span{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adm-link button,.adm-pa button{flex-shrink:0;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:8px 12px;font:600 13px Manrope,system-ui,sans-serif;cursor:pointer}
+.adm-wide{width:100%;margin-top:12px;font-size:15px;padding:12px}
+.adm-person{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.adm-person:first-of-type{border-top:0}
+.adm-person.off .adm-pt{opacity:.55}
+.adm-pt{flex:1;min-width:0}
+.adm-pt b{font-weight:600;font-size:14px;word-break:break-all}
+.adm-pt div{color:var(--muted);font-size:12.5px;margin-top:2px}
+.adm-pa{display:flex;flex-direction:column;gap:6px}
+.adm-pa button.danger{color:var(--bad)}
+.adm-badge{display:inline-block;font:700 10.5px Manrope,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);background:var(--sel-bg);border-radius:6px;padding:2px 6px;margin-left:4px;vertical-align:1px}
+.adm-badge.off{color:var(--bad);background:#3a1c1f}
 /* подсказка «Установить на экран» */
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
@@ -237,7 +273,9 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 
   </div>
 
-  <div class="foot"><button id="howInstall">Как установить на телефон</button></div>
+  <section id="admin"></section>
+
+  <div class="foot"><button id="howInstall">Как установить на телефон</button><button id="adminLink" class="hidden">Статистика</button></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="sheet"></div>
@@ -246,5 +284,6 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 <script src="vendor/supabase.js"></script>
 <script src="app.js"></script>
 <script src="sync.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>
