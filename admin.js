@@ -62,7 +62,7 @@ const Admin = (() => {
       ${balanceCard()}
       <div class="adm-card">
         <h3>ИИ</h3>
-        <div class="adm-spend"><b>${usd(data.month_total)}</b><span>потрачено в этом месяце из ${usd(data.global_monthly_usd)}</span></div>
+        <div class="adm-spend"><b>${usd(data.month_total)}</b><span>потрачено в этом месяце из ${usd(data.global_monthly_usd)}</span>${(() => { const ppl = data.people.reduce((t, p) => t + Number(p.cost_month || 0), 0), nw = Math.max(0, Number(data.month_total) - ppl); return `<span style="display:block;margin-top:4px">подборы людей ${usd(ppl)} · новинки недели ${usd(nw)}</span>`; })()}</div>
         <div class="bar"><i style="width:${Math.min(100, data.global_monthly_usd > 0 ? 100 * data.month_total / data.global_monthly_usd : 0)}%"></i></div>
         <div class="label">Модель для всех</div>
         <div class="chips" id="aiModel">${MODELS.map(([m, n, h]) => `<button class="chip ${m === data.ai_model ? "on" : ""}" data-m="${m}">${n}<small>${h}</small></button>`).join("")}</div>
