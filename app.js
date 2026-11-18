@@ -279,9 +279,7 @@ const SITES = {
 const site = (k, q) => { const x = SITES[k]; return `<a class="site" href="${x.u(q)}" target="_blank" rel="noopener" title="${x.n}" aria-label="${x.n}" style="background:${x.bg};color:${x.fg}">${x.g}</a>`; };
 function links(x, small){
   const q = encodeURIComponent(`${x.title} ${x.author||""}`.replace(/\s+/g," ").trim());
-  const rq = encodeURIComponent(`${x.title} ${x.author||""} обзор книги`.replace(/\s+/g," "));
-  return `<div class="links${small?" sm":""}"><span class="lk">Купить</span>${["lit","cg","oz","ym"].map(k=>site(k,q)).join("")}</div>
-    <div class="links${small?" sm":""}"><span class="lk">Обзор</span>${["yt","vk","rt"].map(k=>site(k,rq)).join("")}</div>`;
+  return `<div class="links${small?" sm":""}"><span class="lk">Купить</span>${["lit","cg","oz","ym"].map(k=>site(k,q)).join("")}</div>`;
 }
 
 function card(x, i, src){
