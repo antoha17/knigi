@@ -442,6 +442,17 @@ $("#tasteTitle").insertAdjacentHTML("beforeend", ARR);
 localLoad(); renderAll();
 Install.maybeAuto();
 
+/* Автообновление: при открытии и при возврате в приложение проверяем новую версию;
+   как только она установилась — один раз перезагружаем страницу. */
 if("serviceWorker" in navigator && location.protocol!=="file:"){
-  navigator.serviceWorker.register("sw.js").catch(()=>{});
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if(!hadController || reloaded) return;
+    reloaded = true; location.reload();
+  });
+  navigator.serviceWorker.register("sw.js", {updateViaCache:"none"}).then(reg => {
+    const check = () => reg.update().catch(()=>{});
+    document.addEventListener("visibilitychange", () => { if(document.visibilityState==="visible") check(); });
+  }).catch(()=>{});
 }

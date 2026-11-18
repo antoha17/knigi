@@ -1,7 +1,7 @@
 /* Service worker: приложение открывается даже без интернета.
    Свои файлы — «сначала сеть, потом кэш»: при каждом открытии берётся свежая версия,
    а без связи показывается последняя сохранённая. Шрифты — из кэша. */
-const CACHE = "knigi-v2";
+const CACHE = "knigi-v3";
 const SHELL = ["./", "index.html", "app.js", "config.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -17,7 +17,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
-    e.respondWith(fetch(req).then(res => {
+    // cache: "no-cache" — всегда спрашиваем у GitHub, не вышла ли новая версия (а не берём из кэша браузера)
+    e.respondWith(fetch(req, {cache: "no-cache"}).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req, {ignoreSearch: true}).then(r => r || caches.match("index.html"))));
