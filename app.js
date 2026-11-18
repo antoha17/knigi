@@ -325,6 +325,12 @@ $("#results").addEventListener("click",onAct);
 $("#news").addEventListener("click",onAct);
 
 /* ---------- мой список ---------- */
+// После «Досмотрел / Дочитал / Посмотрел» спрашиваем: понравилось или нет.
+const asking = new Set();
+function rateRow(i){
+  const t = `data-t="${esc(i.title)}"`;
+  return `<div class="rate"><span>Как вам?</span><button ${t} data-k="fin-up">${IC("up")}Понравилось</button><button ${t} data-k="fin-down">${IC("down")}Не зашло</button></div>`;
+}
 const EMPTY = {"watching": "Отметьте книгу «Читаю», и здесь будет прогресс в процентах", "liked": "Здесь будут книги, которые понравились", "disliked": "Здесь будет то, что не понравилось. Такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
 
 function renderList(){
@@ -349,11 +355,11 @@ function renderList(){
         <div class="bar"><i style="width:${i.progress||0}%"></i></div>
         <div class="prog"><span class="pv">Прочитано ${i.progress||0}%</span>
           <button ${t(i)} data-k="ep-">−10%</button><button ${t(i)} data-k="ep+">+10%</button>
-          <button class="fin" ${t(i)} data-k="fin">${IC("check")}Дочитал</button></div></div>`).join("");
+          <button class="fin" ${t(i)} data-k="ask">${IC("check")}Дочитал</button></div>${asking.has(norm(i.title))?rateRow(i):""}</div>`).join("");
     } else if(k==="later"){
       body = arr.length ? arr.map(i=>`<div class="row stack"><div class="top"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
         <div>${sub(i)}${i.hook?" · "+esc(i.hook):""}</div></div>
-        <div class="mini"><button ${t(i)} data-k="watching" class="start" title="Перенести в «Читаю сейчас»"><span>Начать</span></button><button ${t(i)} data-k="liked" title="Понравилось" aria-label="Понравилось">${IC("up")}</button><button ${t(i)} data-k="disliked" title="Не моё" aria-label="Не моё">${IC("down")}</button>${del(i)}</div></div>${links(i,true)}</div>`).join("")
+        <div class="mini"><button ${t(i)} data-k="watching" class="start" title="Перенести в «Читаю сейчас»"><span>Начать</span></button>${del(i)}</div></div>${asking.has(norm(i.title))?rateRow(i):""}${links(i,true)}</div>`).join("")
         : `<div class="empty">Пока пусто. Добавляйте из подборок или то, что посоветовали</div>`;
     } else {
       body = arr.map(i=>`<div class="row"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
@@ -376,7 +382,10 @@ $("#lists").addEventListener("click",e=>{
     it.progress = Math.min(100, Math.max(0, (it.progress||0) + (k==="ep+"?10:-10)));
     it.ts=Date.now(); renderList(); saveSoon(); return;
   }
-  if(k==="fin"){
+  if(k==="ask"){ const n=norm(b.dataset.t); asking.has(n)?asking.delete(n):asking.add(n); renderList(); return; }
+  if(k==="fin-down"){ asking.delete(norm(b.dataset.t)); setVerdict({title:b.dataset.t},"disliked"); toast("Перенёс в «Не зашло». Такое больше не предложу"); return; }
+  if(k==="fin-up"){
+    asking.delete(norm(b.dataset.t));
     setVerdict({title:b.dataset.t},"liked");
     toast("Отлично! Подбираю, что почитать дальше");
     $("#similar").value=b.dataset.t;
