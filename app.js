@@ -636,6 +636,15 @@ document.addEventListener("touchend", e => { const n = Date.now(); if(n - lastTo
   }, true);
 })();
 
+/* Инструкция: открывается прямо в приложении (картинки страниц), без перехода во внешний просмотрщик */
+$("#helpBtn").onclick = () => {
+  const box = document.createElement("div"); box.className = "help-view";
+  box.innerHTML = [1,2,3].map(n => `<img src="help/p-${n}.jpg" alt="Инструкция, страница ${n}" loading="lazy">`).join("") +
+    `<button class="help-close" aria-label="Закрыть">${IC("x")}</button>`;
+  document.body.appendChild(box); document.body.style.overflow = "hidden";
+  box.querySelector(".help-close").onclick = () => { box.remove(); document.body.style.overflow = ""; };
+};
+
 /* ---------- запуск ---------- */
 function renderAll(){ $("#profile").value = state.profile; renderList(); renderNews(); }
 $("#surprise").innerHTML = IC("dice") + "<span>Удиви</span>";
