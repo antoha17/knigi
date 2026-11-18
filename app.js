@@ -380,7 +380,7 @@ $("#lists").addEventListener("click",e=>{
 /* ---------- быстро добавить (текст; голос — через микрофон на клавиатуре телефона) ---------- */
 async function quickAdd(){
   const text=$("#quick").value.trim(); if(!text) return;
-  const btn=$("#addBtn"); btn.disabled=true; btn.textContent="Разбираю…";
+  const btn=$("#addBtn"); btn.disabled=true; btn.classList.add("busy");
   let rec=null;
   if(AI.ready()){
     try{
@@ -395,7 +395,7 @@ async function quickAdd(){
   const v = ["later","watching","liked","disliked"].includes(rec.verdict)?rec.verdict:"later";
   setVerdict(rec, v);
   $("#quick").value="";
-  btn.disabled=false; btn.textContent="Добавить";
+  btn.disabled=false; btn.classList.remove("busy");
   toast(`«${rec.title}» → ${VERD[v]}`);
 }
 $("#addBtn").onclick=quickAdd;
@@ -554,7 +554,7 @@ const TASTE_CFG = {
 /* ---------- запуск ---------- */
 function renderAll(){ $("#profile").value = state.profile; renderList(); renderNews(); }
 $("#surprise").innerHTML = IC("dice") + "<span>Удиви</span>";
-$("#addTitle").insertAdjacentHTML("afterbegin", IC("plus"));
+$("#addBtn").innerHTML = IC("plus", 2.2);
 $("#tasteTitle").insertAdjacentHTML("afterbegin", IC("target"));
 $("#tasteTitle").insertAdjacentHTML("beforeend", ARR);
 localLoad(); renderAll();
