@@ -121,13 +121,14 @@ const Sync = (() => {
   }
 
   const TITLES = {login:"Вход", signup:"Регистрация", reset:"Восстановить пароль", newpass:"Новый пароль"};
-  function showLogin(mode, email){
+  // inGate = true: форма прямо на главном экране (до входа), иначе — во всплывающем окне.
+  function showLogin(mode, email, inGate){
     mode = mode || "login";
-    const box = $("#sheet");
+    const box = inGate ? $("#gate") : $("#sheet");
     const emailInp = `<input id="lgEmail" type="email" inputmode="email" autocomplete="username" placeholder="Почта" style="margin-top:14px" value="${esc(email||"")}">`;
     const passInp = (ac, ph) => `<input id="lgPass" type="password" autocomplete="${ac}" placeholder="${ph}" style="margin-top:8px">`;
     const body = {
-      login: `<p>Список будет храниться на сервере и будет одинаковым на телефоне и компьютере.</p>${emailInp}${passInp("current-password","Пароль")}
+      login: `<p>Войдите или создайте аккаунт. Список будет храниться на сервере и будет одинаковым на телефоне и компьютере.</p>${emailInp}${passInp("current-password","Пароль")}
         <div class="btns"><button class="btn main" id="lgGo">Войти</button></div>
         <div class="lg-links"><button id="lgToSignup">Создать аккаунт</button><button id="lgToReset">Забыли пароль?</button></div>`,
       signup: `<p>Придумайте пароль: не меньше 6 символов. Приложение запомнит вход, вводить его каждый раз не придётся.</p>${emailInp}${passInp("new-password","Новый пароль")}
@@ -139,21 +140,25 @@ const Sync = (() => {
       newpass: `<p>Придумайте новый пароль: не меньше 6 символов.</p>${passInp("new-password","Новый пароль")}
         <div class="btns"><button class="btn main" id="lgGo">Сохранить пароль</button></div>`
     }[mode];
-    box.innerHTML = `<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="lgTitle">
-      <h3 id="lgTitle">${TITLES[mode]}</h3>${body}
-      <p id="lgErr" style="color:var(--bad)"></p>
-      <div class="btns" style="margin-top:6px"><button class="btn ghost" style="flex:1" id="lgClose">${mode==="newpass"?"Позже":"Отмена"}</button></div>
-    </div></div>`;
-    const close = () => { box.innerHTML = ""; };
-    $(".sheet-bg").onclick = e => { if(e.target.classList.contains("sheet-bg")) close(); };
-    $("#lgClose").onclick = close;
+    const err0 = `<p id="lgErr" class="lg-err"></p>`;
+    if(inGate){
+      box.innerHTML = `<div class="gate-card"><h3 id="lgTitle">${TITLES[mode]}</h3>${body.replace('<div class="btns">', err0+'<div class="btns">')}</div>`;
+    } else {
+      box.innerHTML = `<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="lgTitle">
+        <h3 id="lgTitle">${TITLES[mode]}</h3>${body.replace('<div class="btns">', err0+'<div class="btns">')}
+        <div class="btns" style="margin-top:6px"><button class="btn ghost" style="flex:1" id="lgClose">${mode==="newpass"?"Позже":"Отмена"}</button></div>
+      </div></div>`;
+      $(".sheet-bg").onclick = e => { if(e.target.classList.contains("sheet-bg")) close(); };
+      $("#lgClose").onclick = () => close();
+    }
+    const close = () => { if(!inGate) box.innerHTML = ""; };
     const curEmail = () => ($("#lgEmail") ? $("#lgEmail").value.trim().toLowerCase() : email);
-    [["#lgToSignup","signup"],["#lgToLogin","login"],["#lgToReset","reset"]].forEach(([id, m]) => { const b=$(id); if(b) b.onclick = () => showLogin(m, curEmail()); });
+    [["#lgToSignup","signup"],["#lgToLogin","login"],["#lgToReset","reset"]].forEach(([id, m]) => { const b=$(id); if(b) b.onclick = () => showLogin(m, curEmail(), inGate); });
     const err = t => { $("#lgErr").textContent = t || ""; };
     const go = $("#lgGo"), label = go.textContent;
     const busy = b => { go.disabled = b; go.textContent = b ? "Минутку…" : label; };
     const first = $("#lgEmail") && !email ? $("#lgEmail") : ($("#lgPass") || $("#lgEmail"));
-    setTimeout(() => first && first.focus(), 50);
+    if(!inGate || email) setTimeout(() => first && first.focus(), 50);
 
     const submit = async () => {
       const addr = curEmail(), pass = $("#lgPass") ? $("#lgPass").value : "";
@@ -165,19 +170,19 @@ const Sync = (() => {
         if(mode === "login"){
           const {error} = await sb.auth.signInWithPassword({email: addr, password: pass});
           if(error) throw error;
-          close(); toast("Готово, вы вошли");
+          close(); toast("Готово, вы вошли"); showTab("pick");
         } else if(mode === "signup"){
           const {data, error} = await sb.auth.signUp({email: addr, password: pass});
           if(error) throw error;
           if(data && data.user && Array.isArray(data.user.identities) && !data.user.identities.length) throw {code:"user_exists"};
           if(!data.session){ busy(false); err("Аккаунт создан, но вход пока не разрешён. Напишите владельцу приложения"); return; }
-          close(); toast("Аккаунт создан, вы вошли");
+          close(); toast("Аккаунт создан, вы вошли"); showTab("pick");
         } else if(mode === "reset"){
           const redirectTo = location.origin + location.pathname;
           const {error} = await sb.auth.resetPasswordForEmail(addr, {redirectTo});
           if(error) throw error;
           busy(false); err(""); go.textContent = "Письмо отправлено"; go.disabled = true;
-          $(".sheet p").textContent = "Письмо отправлено на " + addr + ". Откройте ссылку из него (если письма нет, загляните в «Спам»).";
+          box.querySelector("p").textContent = "Письмо отправлено на " + addr + ". Откройте ссылку из него (если письма нет, загляните в «Спам»).";
         } else if(mode === "newpass"){
           const {error} = await sb.auth.updateUser({password: pass});
           if(error) throw error;
@@ -195,23 +200,29 @@ const Sync = (() => {
     try{ await sb.auth.signOut(); }catch(e){}
   }
 
-  /* ---------- блок «аккаунт» ---------- */
+  /* ---------- экран входа и строка «аккаунт» ---------- */
+  // Пока человек не вошёл, вместо вкладок показываем экран входа.
+  function applyGate(){
+    document.body.classList.remove("auth-pending");
+    const gated = ready() && !user();
+    const was = document.body.classList.contains("gated");
+    document.body.classList.toggle("gated", gated);
+    if(gated && !was) showLogin("login", "", true);
+    if(!gated) $("#gate").innerHTML = "";
+  }
   function renderAccount(){
     const box = $("#account"); if(!box) return;
-    if(!ready()){ box.innerHTML = ""; return; }
-    if(!user()){
-      box.innerHTML = `<div class="acc-card"><div>Войдите, чтобы список не потерялся и был одинаковым на телефоне и компьютере.</div><button class="btn main" id="accLogin">Войти</button></div>`;
-      $("#accLogin").onclick = () => showLogin();
-    } else {
-      const st = {saving:"Сохраняю…", offline:"Нет сети, сохраню позже", error:"Не удалось сохранить, повторю позже", ok:"Всё сохранено"}[status] || "";
-      box.innerHTML = `<div class="acc-line"><span>${IC("check")}${esc(user().email||"")}${st?` · <i>${st}</i>`:""}</span><button id="accOut">Выйти</button></div>`;
-      $("#accOut").onclick = logout;
-    }
+    if(!ready() || !user()){ box.innerHTML = ""; return; }
+    // Показываем только проблемы: «нет сети» или «не удалось сохранить».
+    const st = {offline:"Нет сети, сохраню позже", error:"Не удалось сохранить, повторю позже"}[status] || "";
+    box.innerHTML = `<div class="acc-line"><span>${IC("check")}${esc(user().email||"")}${st?` · <i>${st}</i>`:""}</span><button id="accOut">Выйти</button></div>`;
+    $("#accOut").onclick = logout;
   }
 
   /* ---------- запуск ---------- */
   function init(){
-    if(!ready()){ renderAccount(); return; }
+    if(!ready()){ applyGate(); renderAccount(); return; }
+    setTimeout(() => document.body.classList.remove("auth-pending"), 4000); // на всякий случай
     sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {
       auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "kk-auth"}
     });
@@ -227,9 +238,9 @@ const Sync = (() => {
         try{ localStorage.removeItem(SNAP); }catch(e){}
         state.items = []; state.profile = "";
         try{ localStorage.removeItem(LS_KEY); }catch(e){}
-        renderAll(); renderAccount(); return;
+        renderAll(); renderAccount(); applyGate(); return;
       }
-      renderAccount();
+      renderAccount(); applyGate();
       if(s && (event === "INITIAL_SESSION" || (event === "SIGNED_IN" && was !== s.user.id))){
         setTimeout(() => pull().catch(() => setStatus("error")), 0);
       }
