@@ -281,7 +281,7 @@ const site = (k, q) => { const x = SITES[k]; return `<a class="site" href="${x.u
 function links(x, small){
   const q = encodeURIComponent(`${x.title} ${x.author||""}`.replace(/\s+/g," ").trim());
   // Кнопки одной ширины, сеткой по две: значок + название
-  const ICO = {lit:"icons/shops/lit.png", cg:"icons/shops/cg.png", oz:"icons/shops/oz.png", ym:"icons/shops/ym.png"};
+  const ICO = {lit:"icons/shops/lit.png", cg:"icons/shops/cg.png", oz:"icons/shops/oz.png", ym:"icons/shops/ym.png", ll:"icons/shops/ll.png"};
   const btn = k => { const x = SITES[k]; return `<a class="shop" href="${x.u(q)}" target="_blank" rel="noopener">${ICO[k] ? `<img src="${ICO[k]}" alt="" width="22" height="22">` : `<i style="background:${x.bg};color:${x.fg}">${x.g}</i>`}${x.n}</a>`; };
   return `<div class="shops${small?" sm":""}">
     <div class="lk">Купить</div>
