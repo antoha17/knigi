@@ -120,6 +120,9 @@ const Admin = (() => {
         <button class="btn ghost adm-wide" id="onbAgain">Пройти анкету заново</button>
       </div>`;
     foldCards();
+    // данные пришли — теперь страница достаточно длинная, поднимаем раздел к верху
+    if(wantScroll){ wantScroll = false; const d = $("#adminLink");
+      requestAnimationFrame(() => window.scrollTo({top: d.getBoundingClientRect().top + window.scrollY - 6, behavior: "smooth"})); }
     $("#seatMinus").onclick = () => setSeats(data.seats - 1);
     $("#seatPlus").onclick = () => setSeats(data.seats + 1);
     $("#newInvite").onclick = newInvite;
@@ -302,7 +305,9 @@ const Admin = (() => {
   }
 
   // Данные загружаются заново при каждом раскрытии раздела.
+  let wantScroll = false;
   function open(){
+    wantScroll = true;
     $("#admin").innerHTML = `<div class="status"><span class="dots">Загружаю</span></div>`;
     load();
   }
