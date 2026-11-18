@@ -109,9 +109,9 @@ const Admin = (() => {
         ${people}
       </div>
       <div class="adm-card">
-        <h3>Новинки и копия</h3>
-        <p class="adm-note" id="svcInfo">Новинки недели обновляются сами каждую пятницу утром, резервная копия делается каждое воскресенье.</p>
-        <button class="btn ghost adm-wide" id="newsNow">Обновить новинки сейчас</button>
+        <h3>${APP === "kino" ? "Новинки и копия" : "Резервная копия"}</h3>
+        <p class="adm-note" id="svcInfo">${APP === "kino" ? "Новинки недели обновляются сами каждую пятницу утром, р" : "Р"}езервная копия делается каждое воскресенье.</p>
+        ${APP === "kino" ? `<button class="btn ghost adm-wide" id="newsNow">Обновить новинки сейчас</button>` : ""}
         <button class="btn ghost adm-wide" id="exportNow">Скачать резервную копию</button>
       </div>
       <div class="adm-card">
@@ -130,11 +130,11 @@ const Admin = (() => {
     $("#aiModel").onclick = e => { const c = e.target.closest("[data-m]"); if(!c) return; $("#aiModel").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c)); };
     $("#aiSave").onclick = saveAi;
     $("#balSave").onclick = saveBalance;
-    $("#newsNow").onclick = newsNow;
+    if($("#newsNow")) $("#newsNow").onclick = newsNow;
     $("#exportNow").onclick = exportNow;
     call("admin_backups").then(b => {
       const f = ts => ts ? new Date(ts).toLocaleDateString("ru-RU", {day: "numeric", month: "long"}) : "ещё не было";
-      const el = $("#svcInfo"); if(el && b) el.textContent = `Новинки обновляются каждую пятницу (последние: ${f(b.news_last)}). Резервная копия каждое воскресенье, хранятся последние 8 (последняя: ${f(b.last)}).`;
+      const el = $("#svcInfo"); if(el && b) el.textContent = (APP === "kino" ? `Новинки обновляются каждую пятницу (последние: ${f(b.news_last)}). ` : "") + `Резервная копия каждое воскресенье, хранятся последние 8 (последняя: ${f(b.last)}).`;
     }).catch(() => {});
     $("#onbAgain").onclick = () => { if(window.Taste) Taste.showQuestions(); };
     $("#aiTest").onclick = testModel;
@@ -240,16 +240,28 @@ const Admin = (() => {
     return true;
   }
   async function newsNow(){
-    const btn = $("#newsNow"); btn.disabled = true; btn.textContent = "Ищу новинки… до минуты";
+    const btn = $("#newsNow"), set = t => { btn.textContent = t; };
+    btn.disabled = true; set("Ищу новинки в интернете…");
+    const t0 = Date.now();
     try{
       const r = await fetch(CFG.supabaseUrl.replace(/\/$/, "") + "/functions/v1/news", {method: "POST",
         headers: {"Content-Type": "application/json", apikey: CFG.supabaseAnonKey, Authorization: "Bearer " + Sync.token()}, body: "{}"});
       const j = await r.json().catch(() => ({}));
-      if(!r.ok) throw j;
-      toast(`Готово: ${j.count} новинки`);
-      if(window.onLogin) window.onLogin(sb());
+      if(!r.ok) throw {code: j.code || ("HTTP " + r.status)};
+      // поиск идёт на сервере в фоне — ждём итог (до 3 минут)
+      for(let i = 0; i < 36; i++){
+        await new Promise(res => setTimeout(res, 5000));
+        set(`Ищу новинки… ${Math.round((Date.now() - t0) / 1000)} с`);
+        const {data: st} = await sb().rpc("public_news", {a: "status"});
+        if(st && new Date(st.created_at).getTime() > t0 - 5000){
+          if(/^готово/.test(st.week)){ toast("Новинки обновлены"); if(window.onLogin) window.onLogin(sb()); }
+          else alert("Новинки не обновились:\n" + st.week);
+          return;
+        }
+      }
+      toast("Долго нет ответа. Загляните позже: новинки появятся сами");
     }catch(e){ toast("Не получилось" + (e && e.code ? ` (${e.code})` : "")); }
-    finally{ btn.disabled = false; btn.textContent = "Обновить новинки сейчас"; }
+    finally{ btn.disabled = false; set("Обновить новинки сейчас"); }
   }
   async function exportNow(){
     try{
