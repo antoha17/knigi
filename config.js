@@ -3,6 +3,7 @@
 // они специально для этого предназначены. Секретные ключи (service key, ключ OpenAI)
 // здесь НИКОГДА не пишем: они хранятся только в секретах Supabase.
 window.APP_CONFIG = {
-  supabaseUrl: "",      // например: https://abcdefgh.supabase.co
-  supabaseAnonKey: ""   // публичный ключ проекта (anon / publishable)
+  supabaseUrl: "https://ipqcqexoymvfoxejypyr.supabase.co",
+  supabaseAnonKey: "sb_publishable_vt-_BHI13a_lgHbYJ4Hj8Q_JZnVFMRp",  // публичный ключ (publishable)
+  aiEnabled: false      // включим, когда заработает серверная функция ИИ (шаг 3)
 };

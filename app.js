@@ -55,7 +55,7 @@ function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show")
 /* ---------- хранение ---------- */
 function localLoad(){try{const s=JSON.parse(localStorage.getItem(LS_KEY)||"null");if(s){state.profile=s.profile||"";state.items=s.items||[]}}catch(e){}}
 function localSave(){try{localStorage.setItem(LS_KEY,JSON.stringify({profile:state.profile,items:state.items,updated:Date.now()}))}catch(e){}}
-function save(){ clearTimeout(saveTimer); saveTimer=null; localSave(); /* шаг 2: отправка в Supabase */ }
+function save(){ clearTimeout(saveTimer); saveTimer=null; localSave(); if(window.Sync) Sync.schedule(); }
 function saveSoon(){ localSave(); clearTimeout(saveTimer); saveTimer=setTimeout(save,900); }
 
 /* ---------- записи списка ---------- */
@@ -93,7 +93,7 @@ const val = id => document.querySelector(`#${id} .chip.on`).dataset.v;
 
 /* ---------- ИИ (через серверную функцию) ---------- */
 const AI = {
-  ready(){ return !!(CFG.supabaseUrl && CFG.supabaseAnonKey); },
+  ready(){ return !!(CFG.supabaseUrl && CFG.supabaseAnonKey && CFG.aiEnabled); },
   async _post(body, signal){
     if(!this.ready()) throw {code:"no_server"};
     const token = (window.Auth && Auth.token && Auth.token()) || CFG.supabaseAnonKey;

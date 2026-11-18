@@ -1,8 +1,8 @@
 /* Service worker: приложение открывается даже без интернета.
    Свои файлы — «сначала сеть, потом кэш»: при каждом открытии берётся свежая версия,
    а без связи показывается последняя сохранённая. Шрифты — из кэша. */
-const CACHE = "knigi-v6";
-const SHELL = ["./", "index.html", "app.js", "config.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png"];
+const CACHE = "knigi-v7";
+const SHELL = ["./", "index.html", "app.js", "config.js", "sync.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
