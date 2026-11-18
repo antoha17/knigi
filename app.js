@@ -163,7 +163,7 @@ function buildPrompt(count, surprise){
 Его вкус (написал сам): ${state.profile || "не указан"}
 Понравилось: ${listBy("liked")}
 Читает сейчас: ${listBy("watching")}
-Не зашло: ${listBy("disliked")}
+Не понравилось: ${listBy("disliked")}
 
 ${surprise
   ? "Режим «Удиви меня»: одна неочевидная книга, которую он вряд ли знает, но которая очень вероятно его затянет."
@@ -291,7 +291,7 @@ $("#results").addEventListener("click",onAct);
 $("#news").addEventListener("click",onAct);
 
 /* ---------- мой список ---------- */
-const EMPTY = {"watching": "Отметьте книгу «Читаю» — здесь будет прогресс в процентах", "liked": "Здесь будут книги, которые зашли", "disliked": "Здесь будет то, что не зашло — такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
+const EMPTY = {"watching": "Отметьте книгу «Читаю» — здесь будет прогресс в процентах", "liked": "Здесь будут книги, которые понравились", "disliked": "Здесь будет то, что не понравилось, — такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
 
 function renderList(){
   const later = state.items.filter(i=>i.verdict==="later").length;
