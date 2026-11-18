@@ -73,6 +73,8 @@ function setVerdict(rec, verdict){
     state.items.unshift(it);
   }
   if(verdict==="watching" && it.progress==null) it.progress = Math.min(100, Math.max(0, +rec.progress || 0));
+  { const l = rec.listen!==undefined ? rec.listen : (typeof rec.audio==="boolean" ? rec.audio : (rec.audio==="true" ? true : undefined));
+    if(verdict==="watching" && l!==undefined) it.audio = !!l; }
   save(); renderList();
   return it;
 }
@@ -303,7 +305,7 @@ function card(x, i, src){
     <div class="hook">${esc(x.hook||"")}</div>
     ${x.why?`<div class="why">${esc(x.why)}</div>`:""}
     <div class="acts">
-      ${acts.map(k=>`<button class="act ${v===k?"sel":""}" data-src="${src}" data-i="${i}" data-k="${k}">${IC(VIC[k])}${SHORT[k]}</button>`).join("")}
+      ${acts.map(k=>{ const au = k==="watching" && val("fmt")==="audio"; return `<button class="act ${v===k?"sel":""}" data-src="${src}" data-i="${i}" data-k="${k}"${au?" data-audio=\"1\"":""}>${IC(au?"head":VIC[k])}${au?"Слушаю":SHORT[k]}</button>`; }).join("")}
     </div>
     ${links(x)}
   </div>`;
@@ -331,6 +333,7 @@ function onAct(e){
   const b=e.target.closest(".act");if(!b)return;
   const src=b.dataset.src, x = src==="n" ? news.items[+b.dataset.i] : current[+b.dataset.i];
   if(!x) return;
+  if(b.dataset.k==="watching") x.listen = b.dataset.audio==="1";
   setVerdict(x,b.dataset.k);
   toast(b.dataset.k==="later"?"Добавил в «Хочу прочитать»":b.dataset.k==="watching"?"Добавил в «Читаю сейчас»":"Запомнил");
   // отмеченная карточка плавно исчезает
@@ -358,9 +361,12 @@ function renderList(){
   const t = i => `data-t="${esc(i.title)}"`;
   const del = i => `<button ${t(i)} data-k="del" title="Убрать" aria-label="Убрать">${IC("x")}</button>`;
   const yr = i => i.year?` <span class="yr">${esc(i.year)}</span>`:"";
-  const open = k => openGroups.has(k)?"open":"";
+  const q = norm(($("#listQ")||{}).value||"");
+  const hit = i => !q || norm([i.title,i.author,i.note,i.original].filter(Boolean).join(" ")).includes(q);
+  const open = k => (q || openGroups.has(k))?"open":"";
   $("#lists").innerHTML = groups.map(([k,name])=>{
-    const arr = state.items.filter(i=>i.verdict===k);
+    const arr = state.items.filter(i=>i.verdict===k && hit(i));
+    if(q && !arr.length) return "";
     let body;
     if(!arr.length && k!=="later"){
       body = `<div class="empty">${EMPTY[k]}</div>`;
@@ -368,8 +374,9 @@ function renderList(){
       body = arr.map(i=>`
       <div class="row watch"><div class="top"><div class="t"><b>${esc(i.title)}</b>${(i.author||i.note)?`<div>${esc([i.author,i.note].filter(Boolean).join(" · "))}</div>`:""}</div>
         <div class="mini">${del(i)}</div></div>
+        <div class="mode"><button ${t(i)} data-k="mode-read" class="${i.audio?"":"on"}">${IC("book")}Читаю</button><button ${t(i)} data-k="mode-audio" class="${i.audio?"on":""}">${IC("head")}Слушаю</button></div>
         <div class="bar"><i style="width:${i.progress||0}%"></i></div>
-        <div class="prog"><span class="pv">Прочитано ${i.progress||0}%</span>
+        <div class="prog"><span class="pv">${i.audio?"Прослушано":"Прочитано"} ${i.progress||0}%</span>
           <button ${t(i)} data-k="ep-">−10%</button><button ${t(i)} data-k="ep+">+10%</button>
           <button class="fin" ${t(i)} data-k="ask">${IC("check")}Дочитал</button></div>${asking.has(norm(i.title))?rateRow(i):""}</div>`).join("");
     } else if(k==="later"){
@@ -383,8 +390,9 @@ function renderList(){
         <div class="mini">${del(i)}</div></div>`).join("");
     }
     return `<details class="sec fold" data-g="${k}" ${open(k)}><summary><h2>${name} <small>${arr.length||""}</small>${ARR}</h2></summary>${body}</details>`;
-  }).join("");
+  }).join("") || `<div class="empty" style="margin-top:12px">По запросу «${esc($("#listQ").value.trim())}» ничего не нашлось</div>`;
 }
+$("#listQ").addEventListener("input", () => renderList());
 $("#lists").addEventListener("toggle",e=>{
   const d=e.target; if(!d.dataset||!d.dataset.g) return;
   d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g);
@@ -393,6 +401,7 @@ $("#lists").addEventListener("click",e=>{
   const b=e.target.closest("button[data-k]");if(!b)return;
   const k=b.dataset.k, it=findItem(b.dataset.t);
   if(k==="del") return removeItem(b.dataset.t);
+  if(k==="mode-read"||k==="mode-audio"){ if(it){ it.audio = k==="mode-audio"; it.ts=Date.now(); renderList(); saveSoon(); } return; }
   if(k==="ep+"||k==="ep-"){
     if(!it) return;
     it.progress = Math.min(100, Math.max(0, (it.progress||0) + (k==="ep+"?10:-10)));
@@ -408,7 +417,7 @@ $("#lists").addEventListener("click",e=>{
     showTab("pick"); pick(false); return;
   }
   setVerdict({title:b.dataset.t}, k);
-  toast(k==="watching"?"Перенёс в «Читаю сейчас»":k==="liked"?"Перенёс в «Понравилось»":k==="disliked"?"Перенёс в «Не зашло»":"Запомнил");
+  toast(k==="watching"?"Перенёс в «Читаю сейчас». Слушаете? Переключите на «Слушаю»":k==="liked"?"Перенёс в «Понравилось»":k==="disliked"?"Перенёс в «Не зашло»":"Запомнил");
 });
 
 /* ---------- быстро добавить (текст; голос — через микрофон на клавиатуре телефона) ---------- */
@@ -421,7 +430,7 @@ async function quickAdd(){
       const r = await AI.ask(`Человек ведёт личный список книг. Он написал или надиктовал фразу: «${text}».
 Определи, о какой книге речь, и что он хочет отметить.
 Ответь только JSON-объектом без текста вокруг:
-{"title":"название книги на русском (исправь опечатки и ошибки распознавания речи)","author":"автор, если знаешь","kind":"fiction или nonfiction","verdict":"later (посоветовали / хочу прочитать) | watching (начал читать или слушать) | liked (прочитал, понравилось) | disliked (не понравилось, бросил)","progress":0,"note":"кто посоветовал или короткая заметка из фразы, иначе пустая строка"}`, {kind:"quick"});
+{"title":"название книги на русском (исправь опечатки и ошибки распознавания речи)","author":"автор, если знаешь","kind":"fiction или nonfiction","verdict":"later (посоветовали / хочу прочитать) | watching (начал читать или слушать) | liked (прочитал, понравилось) | disliked (не понравилось, бросил)","progress":0,"audio":"true, если слушает аудиокнигу, иначе false","note":"кто посоветовал или короткая заметка из фразы, иначе пустая строка"}`, {kind:"quick"});
       rec = parseJSON(r.text);
     }catch(e){ rec=null; }
   }
@@ -618,7 +627,7 @@ document.addEventListener("touchend", e => { const n = Date.now(); if(n - lastTo
         const safe = parseFloat(getComputedStyle(d.querySelector("summary")).top) || 6;
         const top = d.getBoundingClientRect().top + window.scrollY - safe;
         // поднимаем, только если раскрытое не помещается на экране
-        if(d.getBoundingClientRect().bottom > window.innerHeight) window.scrollTo({top, behavior: "smooth"});
+        if(d.id === "adminLink" || d.getBoundingClientRect().bottom > window.innerHeight) window.scrollTo({top, behavior: "smooth"});
       });
     } else if(d.dataset.backY){
       const y = +d.dataset.backY; delete d.dataset.backY;

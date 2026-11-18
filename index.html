@@ -198,6 +198,13 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 .rate button{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:600 13px Manrope,system-ui,sans-serif;cursor:pointer}
 .rate .ic{width:16px;height:16px;color:var(--accent)}
 @keyframes spin{to{transform:rotate(360deg)}}
+.mode{display:inline-flex;gap:4px;margin-top:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.mode button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--muted);font:600 13px Manrope,system-ui,sans-serif;cursor:pointer}
+.mode button .ic{width:15px;height:15px}
+.mode button.on{background:var(--sel-bg);color:var(--accent)}
+.list-search{position:relative;margin-top:10px}
+.list-search svg{position:absolute;left:13px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.list-search input{padding-left:40px;height:46px;border-radius:14px}
 .add-hint{color:var(--muted);font-size:12.5px;line-height:1.4;padding:2px 10px 0}
 /* анкета «Мой вкус» */
 #onb{display:none}
@@ -380,6 +387,7 @@ details.fold[open] .adm-fold[open]>summary .arr,.adm-fold[open]>summary .arr{tra
       </div>
       <p class="add-hint">Посоветовали или уже читали? Напишите название и что с ним: «посоветовали Три товарища», «читаю 1984», «прочитал Атомные привычки, понравилось». Книга сама попадёт в нужный раздел списка.</p>
     </div>
+    <div class="list-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="listQ" type="search" placeholder="Поиск по списку" autocomplete="off" enterkeyhint="search"></div>
     <div id="lists"></div>
 
     <details class="sec fold" id="tasteBox">
