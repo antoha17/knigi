@@ -86,9 +86,12 @@ textarea{min-height:110px;resize:vertical}
 .act.sel .ic{color:var(--accent)}
 .find{display:inline-flex;align-items:center;gap:6px;margin-top:12px;color:var(--later);font-size:14px;text-decoration:none}
 .find .ic{width:15px;height:15px}
-.links{display:flex;gap:16px;flex-wrap:wrap}
-.links.sm{gap:18px}
-.links.sm .find{margin-top:6px;font-size:13px}
+.links{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.links+.links{margin-top:8px}
+.links.sm{margin-top:8px}
+.links .lk{color:var(--muted);font-size:13px;min-width:56px}
+.site{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font:800 12px Manrope,system-ui,sans-serif;letter-spacing:-.3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.links.sm .site{width:28px;height:28px;border-radius:8px}
 .sec{margin-top:22px}
 .sec h2{font:700 15px Manrope,system-ui,sans-serif;display:flex;align-items:center;gap:8px}
 .sec h2 small{color:var(--muted);font-weight:500}

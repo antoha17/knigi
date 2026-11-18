@@ -266,13 +266,22 @@ function maybeThanksCard(){
 $("#go").onclick=()=>pick(false);
 $("#surprise").onclick=()=>pick(true);
 
+// Значки площадок (простые монограммы в фирменных цветах): ссылка ведёт на поиск по названию.
+const SITES = {
+  yt:  {n:"YouTube",       bg:"#ff0033", fg:"#fff", g:'<svg viewBox="0 0 24 24" width="12" height="12"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>', u:q=>"https://www.youtube.com/results?search_query="+q},
+  vk:  {n:"VK Видео",      bg:"#0077ff", fg:"#fff", g:"VK", u:q=>"https://vk.com/video?q="+q},
+  rt:  {n:"Rutube",        bg:"#100943", fg:"#fff", g:"R",  u:q=>"https://rutube.ru/search/?query="+q},
+  lit: {n:"Литрес",        bg:"#ff4c00", fg:"#fff", g:"Л",  u:q=>"https://www.litres.ru/search/?q="+q},
+  cg:  {n:"Читай-город",   bg:"#ff6a00", fg:"#fff", g:"ЧГ", u:q=>"https://www.chitai-gorod.ru/search?phrase="+q},
+  oz:  {n:"Ozon",          bg:"#005bff", fg:"#fff", g:"O",  u:q=>"https://www.ozon.ru/search/?text="+q},
+  ym:  {n:"Яндекс Маркет", bg:"#ffcc00", fg:"#1a1a1a", g:"М", u:q=>"https://market.yandex.ru/search?text="+q}
+};
+const site = (k, q) => { const x = SITES[k]; return `<a class="site" href="${x.u(q)}" target="_blank" rel="noopener" title="${x.n}" aria-label="${x.n}" style="background:${x.bg};color:${x.fg}">${x.g}</a>`; };
 function links(x, small){
-  const tq = encodeURIComponent(`${x.title} ${x.author||""} обзор книги`.replace(/\s+/g," "));
-  const q = encodeURIComponent(`${x.title} ${x.author||""}`.trim());
-  return `<div class="links${small?" sm":""}">
-      <a class="find" href="https://www.litres.ru/search/?q=${q}" target="_blank" rel="noopener">${IC("book")}Литрес</a>
-      <a class="find" href="https://www.youtube.com/results?search_query=${tq}" target="_blank" rel="noopener">${IC("play")}Обзор</a>
-    </div>`;
+  const q = encodeURIComponent(`${x.title} ${x.author||""}`.replace(/\s+/g," ").trim());
+  const rq = encodeURIComponent(`${x.title} ${x.author||""} обзор книги`.replace(/\s+/g," "));
+  return `<div class="links${small?" sm":""}"><span class="lk">Купить</span>${["lit","cg","oz","ym"].map(k=>site(k,q)).join("")}</div>
+    <div class="links${small?" sm":""}"><span class="lk">Обзор</span>${["yt","vk","rt"].map(k=>site(k,rq)).join("")}</div>`;
 }
 
 function card(x, i, src){
