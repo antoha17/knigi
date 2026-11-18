@@ -1,11 +1,19 @@
-/* Service worker: приложение открывается даже без интернета.
-   Свои файлы — «сначала сеть, потом кэш»: при каждом открытии берётся свежая версия,
-   а без связи показывается последняя сохранённая. Шрифты — из кэша. */
-const CACHE = "knigi-v9";
-const SHELL = ["./", "index.html", "app.js", "config.js", "sync.js", "vendor/supabase.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png"];
+/* Service worker: приложение открывается мгновенно из памяти телефона и работает без интернета.
+   Все файлы приложения берутся из кэша. Новая версия скачивается в фоне: при каждом изменении
+   приложения меняется номер CACHE ниже, телефон замечает новый sw.js, заранее скачивает свежие файлы
+   и app.js один раз тихо перезагружает страницу.
+   ВАЖНО: при любом изменении файлов приложения увеличивать номер версии в CACHE. */
+const CACHE = "knigi-v11";
+const SHELL = ["./", "index.html", "app.js", "config.js", "sync.js", "vendor/supabase.js", "manifest.webmanifest",
+  "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png",
+  "fonts/manrope-cyrillic-wght-normal.woff2", "fonts/manrope-latin-wght-normal.woff2",
+  "fonts/unbounded-cyrillic-wght-normal.woff2", "fonts/unbounded-latin-wght-normal.woff2"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: "reload" — берём файлы прямо с сервера, мимо кэша браузера, чтобы новая версия была действительно новой
+  e.waitUntil(caches.open(CACHE)
+    .then(c => c.addAll(SHELL.map(u => new Request(u, {cache: "reload"}))))
+    .then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys()
@@ -16,15 +24,9 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.origin === location.origin) {
-    // cache: "no-cache" — всегда спрашиваем у GitHub, не вышла ли новая версия (а не берём из кэша браузера)
-    e.respondWith(fetch(req, {cache: "no-cache"}).then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
-      return res;
-    }).catch(() => caches.match(req, {ignoreSearch: true}).then(r => r || caches.match("index.html"))));
-  } else if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
-    e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
-      const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res;
-    })));
-  }
+  if (url.origin !== location.origin) return;           // Supabase и прочее — напрямую в сеть
+  const key = req.mode === "navigate" ? "index.html" : req;
+  e.respondWith(caches.open(CACHE).then(c => c.match(key, {ignoreSearch: true}).then(hit => hit ||
+    fetch(req).then(res => { if (res.ok && req.mode !== "navigate") c.put(req, res.clone()); return res; })
+      .catch(() => c.match("index.html")))));
 });

@@ -222,7 +222,12 @@ const Sync = (() => {
   /* ---------- запуск ---------- */
   function init(){
     if(!ready()){ applyGate(); renderAccount(); return; }
-    setTimeout(() => document.body.classList.remove("auth-pending"), 4000); // на всякий случай
+    // Не ждём ответа сервера: если вход сохранён на устройстве — сразу показываем приложение,
+    // если нет — сразу экран входа. Сервер потом только уточнит.
+    let stored = false; try{ stored = !!localStorage.getItem("kk-auth"); }catch(e){}
+    document.body.classList.toggle("gated", !stored);
+    if(!stored) showLogin("login", "", true);
+    document.body.classList.remove("auth-pending");
     sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {
       auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "kk-auth"}
     });
