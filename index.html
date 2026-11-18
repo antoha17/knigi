@@ -146,7 +146,9 @@ textarea{min-height:110px;resize:vertical}
 details.fold summary{list-style:none;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
 details.fold summary::-webkit-details-marker{display:none}
 /* заголовок раскрытого раздела прилипает к верху экрана, пока листаете его записи */
-details.fold[open]>summary{position:sticky;top:calc(env(safe-area-inset-top) + 6px);z-index:6;background:var(--panel);box-shadow:0 -40px 0 0 var(--bg),0 6px 14px -6px rgba(0,0,0,.6)}
+details.fold[open]>summary{position:sticky;top:calc(env(safe-area-inset-top) + 6px);z-index:6;background:var(--panel);box-shadow:0 6px 14px -6px rgba(0,0,0,.6)}
+/* полоса под часами и батареей: листаемое содержимое уходит под неё, а не просвечивает */
+body::before{content:"";position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top) + 6px);background:var(--bg);z-index:7;pointer-events:none}
 .adm-fold[open]>summary{position:static!important;box-shadow:none!important}
 details.fold summary h2{margin:0}
 details.fold .arr{margin-left:auto;color:var(--muted);transition:transform .2s;display:flex}
