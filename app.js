@@ -445,15 +445,19 @@ $("#tasteTitle").insertAdjacentHTML("beforeend", ARR);
 localLoad(); renderAll();
 Install.maybeAuto();
 
-/* Автообновление: при открытии и при возврате в приложение проверяем новую версию;
-   как только она установилась — один раз перезагружаем страницу. */
+/* Автообновление: при открытии и при возврате в приложение проверяем новую версию в фоне. */
 if("serviceWorker" in navigator && location.protocol!=="file:"){
   const hadController = !!navigator.serviceWorker.controller;
   let reloaded = false;
+  // Новая версия включается незаметно: не перезагружаем экран у человека на глазах,
+  // а ждём, когда приложение свернут. При следующем открытии уже будет новая версия.
+  let pending = false;
+  const reloadNow = () => { if(reloaded) return; reloaded = true; location.reload(); };
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if(!hadController || reloaded) return;
-    reloaded = true; location.reload();
+    if(!hadController) return;
+    if(document.visibilityState === "hidden") reloadNow(); else pending = true;
   });
+  document.addEventListener("visibilitychange", () => { if(pending && document.visibilityState === "hidden") reloadNow(); });
   navigator.serviceWorker.register("sw.js", {updateViaCache:"none"}).then(reg => {
     const check = () => reg.update().catch(()=>{});
     document.addEventListener("visibilitychange", () => { if(document.visibilityState==="visible") check(); });
