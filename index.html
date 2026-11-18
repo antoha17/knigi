@@ -163,10 +163,14 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 .add-card .quick{display:flex;gap:6px;align-items:center}
 .add-card input{border:0;background:transparent;padding:10px 10px;font-size:16px}
 .add-card input:focus{border:0}
-.add-go{flex-shrink:0;width:32px;height:32px;margin-right:4px;border-radius:10px;border:1px solid var(--line);background:var(--sel-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.add-go .ic{width:16px;height:16px}
+.add-go{flex-shrink:0;height:34px;padding:0 13px;margin-right:2px;border-radius:10px;border:1px solid var(--line);background:var(--sel-bg);color:var(--accent);font:700 13.5px Manrope,system-ui,sans-serif;white-space:nowrap;cursor:pointer}
 .add-go:disabled{opacity:.6}
-.add-go.busy .ic{animation:spin 1s linear infinite}
+/* отмеченная карточка подбора исчезает */
+.card.gone{opacity:0;transform:scale(.97);transition:opacity .25s,transform .25s}
+/* кнопки с подписями в «Посмотреть позже / Хочу прочитать» */
+.later-acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.later-acts button{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:600 13px Manrope,system-ui,sans-serif;cursor:pointer}
+.later-acts .ic{width:16px;height:16px;color:var(--accent)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .add-hint{color:var(--muted);font-size:12.5px;line-height:1.4;padding:2px 10px 0}
 /* анкета «Мой вкус» */
@@ -343,9 +347,9 @@ details.fold[open] .adm-fold[open]>summary .arr,.adm-fold[open]>summary .arr{tra
     <div class="sec add-card">
       <div class="quick">
         <input id="quick" placeholder="Добавить книгу" autocomplete="off" enterkeyhint="send">
-        <button id="addBtn" class="add-go" aria-label="Добавить"></button>
+        <button id="addBtn" class="add-go">Сохранить</button>
       </div>
-      <p class="add-hint">Посоветовали или уже читаете? Напишите как есть, например «начал Три товарища»: ИИ сам поймёт и отметит. Можно надиктовать.</p>
+      <p class="add-hint">Посоветовали или уже читаете? Напишите как есть, например «начал Три товарища». ИИ сам поймёт и отметит. Можно надиктовать.</p>
     </div>
     <div id="lists"></div>
 

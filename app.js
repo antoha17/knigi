@@ -229,7 +229,7 @@ async function pick(surprise){
   if(busy) return;
   if(!AI.ready()){ $("#results").innerHTML = `<div class="status">${aiError({code:"no_server"})}</div>`; return; }
   busy = true; picking = true; $("#go").disabled = $("#surprise").disabled = true;
-  const count = surprise?1:3;
+  const count = surprise?1:3; lastSurprise=!!surprise; resultsShown=false;
   current = [];
   $("#results").innerHTML = `<div class="status"><span class="dots">Ищу, что вас затянет</span></div>`;
   $("#results").scrollIntoView({behavior:"smooth",block:"start"});
@@ -293,24 +293,33 @@ function card(x, i, src){
   </div>`;
 }
 
+let resultsShown=false, lastSurprise=false;
 function renderResults(){
-  if(!current.length){ $("#results").innerHTML=""; return; }
+  if(!current.length){
+    // все карточки разобраны — предлагаем следующие
+    $("#results").innerHTML = resultsShown && !picking ? `<div class="status">Все варианты разобраны</div><div class="btns"><button class="btn ghost" style="flex:1" id="more">Ещё варианты</button></div>` : "";
+    const mb=$("#more"); if(mb) mb.onclick=()=>pick(lastSurprise);
+    return;
+  }
+  resultsShown=true;
   $("#results").innerHTML = current.map((x,i)=>card(x,i,"r")).join("") + (picking ? `<div class="status"><span class="dots">Подбираю ещё</span></div>` : `<div class="btns"><button class="btn ghost" style="flex:1" id="more">Не то, ещё варианты</button></div>
   ${AI.leftToday !== null && AI.leftToday <= 5 ? `<div class="note left-note">${AI.leftToday ? "Сегодня осталось подборов: " + AI.leftToday : "На сегодня подборы закончились"}</div>` : ""}
   <div class="note">Уже читали? Отметьте «Читал», «Зашло» или «Не моё». Чем больше отметок, тем точнее подборка.</div>`);
   if(!picking) maybeThanksCard();
-  const mb=$("#more"); if(mb) mb.onclick=()=>pick(current.length===1);
+  const mb=$("#more"); if(mb) mb.onclick=()=>pick(lastSurprise);
 }
 
 function renderNews(){ $("#news").innerHTML=""; }
 
 function onAct(e){
   const b=e.target.closest(".act");if(!b)return;
-  const x = b.dataset.src==="n" ? news.items[+b.dataset.i] : current[+b.dataset.i];
+  const src=b.dataset.src, x = src==="n" ? news.items[+b.dataset.i] : current[+b.dataset.i];
   if(!x) return;
   setVerdict(x,b.dataset.k);
   toast(b.dataset.k==="later"?"Добавил в «Хочу прочитать»":b.dataset.k==="watching"?"Добавил в «Читаю сейчас»":"Запомнил");
-  renderResults(); renderNews();
+  // отмеченная карточка плавно исчезает
+  const el=b.closest(".card"); if(el) el.classList.add("gone");
+  setTimeout(()=>{ if(src==="r") current=current.filter(y=>y!==x); renderResults(); renderNews(); },260);
 }
 $("#results").addEventListener("click",onAct);
 $("#news").addEventListener("click",onAct);
@@ -344,7 +353,7 @@ function renderList(){
     } else if(k==="later"){
       body = arr.length ? arr.map(i=>`<div class="row stack"><div class="top"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
         <div>${sub(i)}${i.hook?" · "+esc(i.hook):""}</div></div>
-        <div class="mini"><button ${t(i)} data-k="watching" title="Начал читать" aria-label="Начал читать">${IC("book")}</button><button ${t(i)} data-k="liked" title="Прочитал, понравилось" aria-label="Понравилось">${IC("up")}</button><button ${t(i)} data-k="disliked" title="Не моё" aria-label="Не моё">${IC("down")}</button>${del(i)}</div></div>${links(i,true)}</div>`).join("")
+        <div class="mini">${del(i)}</div></div><div class="later-acts"><button ${t(i)} data-k="watching">${IC("book")}<span>Читаю</span></button><button ${t(i)} data-k="liked">${IC("up")}<span>Понравилось</span></button><button ${t(i)} data-k="disliked">${IC("down")}<span>Не моё</span></button></div>${links(i,true)}</div>`).join("")
         : `<div class="empty">Пока пусто. Добавляйте из подборок или то, что посоветовали</div>`;
     } else {
       body = arr.map(i=>`<div class="row"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
@@ -380,7 +389,7 @@ $("#lists").addEventListener("click",e=>{
 /* ---------- быстро добавить (текст; голос — через микрофон на клавиатуре телефона) ---------- */
 async function quickAdd(){
   const text=$("#quick").value.trim(); if(!text) return;
-  const btn=$("#addBtn"); btn.disabled=true; btn.classList.add("busy");
+  const btn=$("#addBtn"); btn.disabled=true; btn.textContent="Сохраняю…";
   let rec=null;
   if(AI.ready()){
     try{
@@ -395,7 +404,7 @@ async function quickAdd(){
   const v = ["later","watching","liked","disliked"].includes(rec.verdict)?rec.verdict:"later";
   setVerdict(rec, v);
   $("#quick").value="";
-  btn.disabled=false; btn.classList.remove("busy");
+  btn.disabled=false; btn.textContent="Сохранить";
   toast(`«${rec.title}» → ${VERD[v]}`);
 }
 // «+» при пустом поле — ставит курсор в поле (как будто нажали на поле); с текстом — добавляет.
@@ -572,7 +581,7 @@ document.addEventListener("touchend", e => { const n = Date.now(); if(n - lastTo
 /* ---------- запуск ---------- */
 function renderAll(){ $("#profile").value = state.profile; renderList(); renderNews(); }
 $("#surprise").innerHTML = IC("dice") + "<span>Удиви</span>";
-$("#addBtn").innerHTML = IC("plus", 2.2);
+$("#addBtn").textContent = "Сохранить";
 $("#tasteTitle").insertAdjacentHTML("afterbegin", IC("target"));
 $("#tasteTitle").insertAdjacentHTML("beforeend", ARR);
 localLoad(); renderAll();
