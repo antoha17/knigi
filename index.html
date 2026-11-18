@@ -44,6 +44,14 @@ h1 span{color:var(--accent)}
 .label i{font-style:normal;text-transform:none;letter-spacing:0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:var(--panel);color:var(--text);font:500 14px Manrope,system-ui,sans-serif;padding:9px 13px;border-radius:999px;cursor:pointer;transition:.15s}
+/* ровные ряды: «Что смотрим / Что ищем / Как» — по три, «Настроение» — сеткой по два */
+#kinds,#fmt{display:flex;flex-wrap:nowrap}
+#kinds .chip,#fmt .chip{flex:1 1 auto;text-align:center;padding:11px 8px;white-space:nowrap}
+.chips.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:359px){#kinds .chip,#fmt .chip{padding:10px 5px;font-size:13px}}
+.chips.grid2 .chip{text-align:center;padding:10px 4px;font-size:13.5px;letter-spacing:-.1px;white-space:nowrap;display:flex;align-items:center;justify-content:center}
+@media (max-width:374px){.chips.grid2 .chip{font-size:12.5px;padding:10px 2px}}
+.chips-hint{color:var(--muted);font-size:12.5px;margin-top:8px;line-height:1.4}
 .chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
 input,textarea{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);font:16px Manrope,system-ui,sans-serif;padding:12px 14px;border-radius:12px;outline:none}
 input:focus,textarea:focus{border-color:var(--accent)}
@@ -272,9 +280,10 @@ body.onb-open #main{display:none}
     <div class="label">Что ищем</div>
     <div class="chips" id="kinds">
       <button class="chip on" data-v="any">Всё равно</button>
-      <button class="chip" data-v="fiction">История</button>
-      <button class="chip" data-v="nonfiction">Полезное</button>
+      <button class="chip" data-v="fiction">Художественная</button>
+      <button class="chip" data-v="nonfiction">Нон-фикшн</button>
     </div>
+    <p class="chips-hint">Художественная: романы, детективы, фантастика. Нон‑фикшн: о жизни, деньгах, психологии, реальные истории.</p>
 
     <div class="label">Как</div>
     <div class="chips" id="fmt">
@@ -284,14 +293,15 @@ body.onb-open #main{display:none}
     </div>
 
     <div class="label">Настроение</div>
-    <div class="chips" id="moods">
-      <button class="chip on" data-v="захватывающий триллер, не оторваться с первых страниц">Захватывающий сюжет</button>
+    <div class="chips grid2" id="moods">
+      <button class="chip on" data-v="захватывающий сюжет, не оторваться с первых страниц">Захватывающий сюжет</button>
       <button class="chip" data-v="детектив или триллер с неожиданной развязкой">Неожиданная развязка</button>
-      <button class="chip" data-v="искусственный интеллект, технологии, будущее — понятно и интересно">ИИ и технологии</button>
-      <button class="chip" data-v="полезное про деньги, работу, привычки, мышление — с практической пользой">Прокачать себя</button>
-      <button class="chip" data-v="психология: почему люди поступают так, как поступают">Психология</button>
+      <button class="chip" data-v="лёгкое и короткое, чтобы быстро втянуться">Лёгкое и короткое</button>
       <button class="chip" data-v="реальные истории, расследования, биографии, читаются как триллер">Реальные истории</button>
-      <button class="chip" data-v="короткое и лёгкое, чтобы быстро втянуться">Короткое</button>
+      <button class="chip" data-v="психология: почему люди поступают так, как поступают">Психология</button>
+      <button class="chip" data-v="прокачать себя: привычки, мышление, продуктивность — с практической пользой">Прокачать себя</button>
+      <button class="chip" data-v="про деньги, карьеру и работу — живо и с практической пользой">Про деньги и работу</button>
+      <button class="chip" data-v="искусственный интеллект, технологии, будущее — понятно и интересно">ИИ и технологии</button>
     </div>
 
     <div class="label">Похоже на… <i>(необязательно)</i></div>

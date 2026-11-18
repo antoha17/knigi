@@ -18,7 +18,7 @@ const openGroups = new Set();
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s||"").toLowerCase().replace(/ё/g,"е").replace(/[^a-zа-я0-9]/g,"");
-const KIND = {fiction:"История", nonfiction:"Полезное"};
+const KIND = {fiction:"Художественная", nonfiction:"Нон-фикшн"};
 const kindOf = k => k==="nonfiction"?"nonfiction":"fiction";
 
 /* ---------- иконки (единый контурный стиль) ---------- */
