@@ -93,10 +93,12 @@ const val = id => document.querySelector(`#${id} .chip.on`).dataset.v;
 
 /* ---------- ИИ (через серверную функцию) ---------- */
 const AI = {
+  leftToday: null,   // сколько подборов осталось сегодня (присылает сервер; null — без лимита)
   ready(){ return !!(CFG.supabaseUrl && CFG.supabaseAnonKey && CFG.aiEnabled); },
   async _post(body, signal){
     if(!this.ready()) throw {code:"no_server"};
-    const token = (window.Auth && Auth.token && Auth.token()) || CFG.supabaseAnonKey;
+    const token = window.Auth && Auth.token && Auth.token();
+    if(!token) throw {code:"login"};
     let r;
     try{
       r = await fetch(CFG.supabaseUrl.replace(/\/$/,"") + "/functions/v1/ai", {
@@ -106,15 +108,17 @@ const AI = {
       });
     }catch(e){ if(e && e.name==="AbortError") throw {code:"cancelled"}; throw {code:"network"}; }
     if(!r.ok){
-      let code = r.status===401?"login":r.status===403?"not_allowed":r.status===429?"limit":"server";
+      let code = r.status===401?"login":r.status===403?"disabled":r.status===429?"limit":"server";
       try{ const j=await r.json(); if(j && j.code) code=j.code; }catch(e){}
       throw {code};
     }
+    const left = r.headers.get("x-left-today");
+    this.leftToday = left === null || left === "" ? null : +left;
     return r;
   },
   // Потоковый ответ: текст приходит кусочками, onText({delta}) вызывается на каждый кусочек.
-  async stream(prompt, {signal, onText, tier}={}){
-    const r = await this._post({prompt, tier:tier||"default", stream:true}, signal);
+  async stream(prompt, {signal, onText, kind}={}){
+    const r = await this._post({prompt, kind:kind||"pick", stream:true}, signal);
     const reader = r.body.getReader(), dec = new TextDecoder();
     let all = "";
     try{
@@ -127,8 +131,8 @@ const AI = {
     }catch(e){ if(e && e.name==="AbortError") throw {code:"cancelled"}; throw e; }
     return {text: all};
   },
-  async ask(prompt, {tier}={}){
-    const r = await this._post({prompt, tier:tier||"quick", stream:false});
+  async ask(prompt, {kind}={}){
+    const r = await this._post({prompt, kind:kind||"quick", stream:false});
     const j = await r.json();
     return {text: j.text || ""};
   }
@@ -142,8 +146,12 @@ function aiError(e){
   const c = e && e.code;
   return c==="no_server" ? "Подбор заработает, когда подключим сервер. Список уже можно вести."
        : c==="login" ? "Войдите, чтобы пользоваться подбором"
-       : c==="not_allowed" ? "Подбор доступен только по приглашению. Напишите владельцу приложения"
-       : c==="limit" ? "На сегодня подборы закончились. Лимит обновится завтра"
+       : c==="disabled" ? "Доступ отключён владельцем приложения"
+       : c==="limit" ? "На сегодня подборы закончились. Завтра будут новые"
+       : c==="month_limit" ? "Лимит подборов на этот месяц закончился. Напишите автору приложения"
+       : c==="global_limit" ? "Подбор временно недоступен. Напишите автору приложения"
+       : c==="provider_busy" ? "ИИ сейчас перегружен. Попробуйте через минуту"
+       : c==="no_key" || c==="provider" || c==="bad_model" ? "ИИ сейчас недоступен. Попробуйте позже или напишите автору"
        : c==="network" ? "Нет связи с сервером. Проверьте интернет"
        : c==="empty" ? "Новых вариантов не нашлось. Попробуйте другое настроение или «Похоже на…»"
        : "Не получилось. Попробуйте ещё раз";
@@ -206,7 +214,7 @@ async function askStream(prompt, want, onRec){
     if(got>=want) ctl.abort();
   };
   try{
-    await AI.stream(prompt, {tier:"default", signal:ctl.signal,
+    await AI.stream(prompt, {kind:"pick", signal:ctl.signal,
       onText:({delta})=>{ const lines=(pending+delta).split("\n"); pending=lines.pop(); lines.forEach(eat); }});
     if(pending.trim()) eat(pending);
   }catch(e){
@@ -273,6 +281,7 @@ function card(x, i, src){
 function renderResults(){
   if(!current.length){ $("#results").innerHTML=""; return; }
   $("#results").innerHTML = current.map((x,i)=>card(x,i,"r")).join("") + (picking ? `<div class="status"><span class="dots">Подбираю ещё</span></div>` : `<div class="btns"><button class="btn ghost" style="flex:1" id="more">Не то, ещё варианты</button></div>
+  ${AI.leftToday !== null && AI.leftToday <= 5 ? `<div class="note left-note">${AI.leftToday ? "Сегодня осталось подборов: " + AI.leftToday : "На сегодня подборы закончились"}</div>` : ""}
   <div class="note">Уже читали? Отметьте «Читал», «Зашло» или «Не моё». Чем больше отметок, тем точнее подборка.</div>`);
   const mb=$("#more"); if(mb) mb.onclick=()=>pick(current.length===1);
 }
@@ -362,7 +371,7 @@ async function quickAdd(){
       const r = await AI.ask(`Человек ведёт личный список книг. Он написал или надиктовал фразу: «${text}».
 Определи, о какой книге речь, и что он хочет отметить.
 Ответь только JSON-объектом без текста вокруг:
-{"title":"название книги на русском (исправь опечатки и ошибки распознавания речи)","author":"автор, если знаешь","kind":"fiction или nonfiction","verdict":"later (посоветовали / хочу прочитать) | watching (начал читать или слушать) | liked (прочитал, понравилось) | disliked (не понравилось, бросил)","progress":0,"note":"кто посоветовал или короткая заметка из фразы, иначе пустая строка"}`, {tier:"quick"});
+{"title":"название книги на русском (исправь опечатки и ошибки распознавания речи)","author":"автор, если знаешь","kind":"fiction или nonfiction","verdict":"later (посоветовали / хочу прочитать) | watching (начал читать или слушать) | liked (прочитал, понравилось) | disliked (не понравилось, бросил)","progress":0,"note":"кто посоветовал или короткая заметка из фразы, иначе пустая строка"}`, {kind:"quick"});
       rec = parseJSON(r.text);
     }catch(e){ rec=null; }
   }

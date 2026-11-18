@@ -7,6 +7,9 @@
 const Admin = (() => {
   const APPS = [["kino", "Что посмотреть"], ["knigi", "Что почитать"]];
   let data = null;
+  // Модели, которые можно выбрать (цены известны серверу). [id, название, подсказка]
+  const MODELS = [["gpt-6.2-sol", "gpt-6.2-sol", "точнее"], ["gpt-6.1-terra", "gpt-6.1-terra", "дешевле"]];
+  const usd = v => "$" + (Number(v) || 0).toFixed(2).replace(".", ",");
   const sb = () => Sync.client();
 
   function link(app){
@@ -45,14 +48,34 @@ const Admin = (() => {
           <b>${esc(p.email || "")}</b>${p.is_owner ? ` <span class="adm-badge">это вы</span>` : ""}${p.disabled ? ` <span class="adm-badge off">отключён</span>` : ""}
           <div>${since(p.created_at)} · ${p.last_seen ? "заходил " + when(p.last_seen) : "ещё не заходил"}</div>
           <div>записей: кино&nbsp;${p.kino} · книги&nbsp;${p.knigi}</div>
+          <div>подборов: сегодня&nbsp;${p.picks_today ?? 0} · за&nbsp;месяц&nbsp;${p.picks_month ?? 0} · ${usd(p.cost_month)}</div>
+          <div>лимит: ${p.unlimited ? "без лимита" : `${p.daily_limit ?? data.daily_limit}&nbsp;в&nbsp;день · ${usd(p.monthly_usd ?? data.monthly_usd)}&nbsp;в&nbsp;месяц`}</div>
         </div>
         ${p.is_owner ? "" : `<div class="adm-pa">
+          <button data-act="lim" data-id="${p.id}" data-email="${esc(p.email || "")}">Лимиты</button>
           <button data-act="${p.disabled ? "on" : "off"}" data-id="${p.id}" data-email="${esc(p.email || "")}">${p.disabled ? "Включить" : "Отключить"}</button>
           <button class="danger" data-act="del" data-id="${p.id}" data-email="${esc(p.email || "")}">Удалить</button>
         </div>`}
       </div>`).join("");
     const canShare = !!navigator.share;
     $("#admin").innerHTML = `
+      <div class="adm-card">
+        <h3>ИИ</h3>
+        <div class="adm-spend"><b>${usd(data.month_total)}</b><span>потрачено в этом месяце из ${usd(data.global_monthly_usd)}</span></div>
+        <div class="bar"><i style="width:${Math.min(100, data.global_monthly_usd > 0 ? 100 * data.month_total / data.global_monthly_usd : 0)}%"></i></div>
+        <div class="label">Модель для всех</div>
+        <div class="chips" id="aiModel">${MODELS.map(([m, n, h]) => `<button class="chip ${m === data.ai_model ? "on" : ""}" data-m="${m}">${n}<small>${h}</small></button>`).join("")}</div>
+        <button class="btn ghost adm-wide" id="aiTest">Проверить модель</button>
+        <p class="adm-note" id="aiTestRes"></p>
+        <div class="label">Лимиты по умолчанию</div>
+        <div class="adm-lims">
+          <label>Подборов в день<input id="limDaily" type="number" inputmode="numeric" min="0" value="${data.daily_limit}"></label>
+          <label>$ в месяц на человека<input id="limMonthly" type="number" inputmode="decimal" min="0" step="0.5" value="${Number(data.monthly_usd)}"></label>
+          <label>$ в месяц на всех<input id="limGlobal" type="number" inputmode="decimal" min="0" step="1" value="${Number(data.global_monthly_usd)}"></label>
+        </div>
+        <button class="btn ghost adm-wide" id="aiSave">Сохранить</button>
+        <p class="adm-note">На вас лимиты не действуют. Личные лимиты человека — кнопка «Лимиты» у него в списке ниже.</p>
+      </div>
       <div class="adm-card">
         <h3>Места</h3>
         <div class="adm-seats">
@@ -84,6 +107,9 @@ const Admin = (() => {
     $("#seatPlus").onclick = () => setSeats(data.seats + 1);
     $("#newInvite").onclick = newInvite;
     $("#thanksSave").onclick = saveThanks;
+    $("#aiModel").onclick = e => { const c = e.target.closest("[data-m]"); if(!c) return; $("#aiModel").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c)); };
+    $("#aiSave").onclick = saveAi;
+    $("#aiTest").onclick = testModel;
     $("#admin").querySelectorAll("[data-share]").forEach(b => b.onclick = () => share(b.dataset.share, b));
     $("#admin").querySelectorAll("[data-act]").forEach(b => b.onclick = () => act(b.dataset.act, b.dataset.id, b.dataset.email));
   }
@@ -91,6 +117,38 @@ const Admin = (() => {
   async function setSeats(n){
     if(n < 0) return;
     try{ await call("admin_set_seats", {n}); data.seats = n; render(); }catch(e){ toast("Не получилось, попробуйте ещё раз"); }
+  }
+  const chosenModel = () => { const c = $("#aiModel .chip.on"); return c ? c.dataset.m : data.ai_model; };
+  async function saveAi(){
+    const daily = parseInt($("#limDaily").value, 10), monthly = parseFloat($("#limMonthly").value), global = parseFloat($("#limGlobal").value);
+    if(!(daily >= 0) || !(monthly >= 0) || !(global >= 0)){ toast("Проверьте цифры лимитов"); return; }
+    try{ await call("admin_set_ai", {model: chosenModel(), daily, monthly, global}); toast("Сохранил"); await load(); }
+    catch(e){ toast("Не получилось сохранить"); }
+  }
+  async function testModel(){
+    const m = chosenModel(), out = $("#aiTestRes"), btn = $("#aiTest");
+    btn.disabled = true; out.textContent = "Спрашиваю " + m + "…";
+    const t0 = Date.now();
+    try{
+      const r = await AI._post({prompt: "Ответь одним словом по-русски: работает?", kind: "test", model: m, stream: false});
+      const j = await r.json();
+      out.textContent = `Работает: ${m} ответила «${String(j.text || "").trim().slice(0, 40)}» за ${((Date.now() - t0) / 1000).toFixed(1).replace(".", ",")} с`;
+    }catch(e){
+      out.textContent = "Не работает: " + aiError(e) + (e && e.code ? ` (${e.code})` : "");
+    }finally{ btn.disabled = false; }
+  }
+  async function personLimits(id, email){
+    const p = data.people.find(x => x.id === id); if(!p) return false;
+    const unlim = confirm(`${email}: без лимитов?\n\nОК — без лимитов, Отмена — задать лимиты.`);
+    if(unlim){ await call("admin_set_person_limits", {uid: id, daily: null, monthly: null, unlim: true}); return true; }
+    const d = prompt(`Подборов в день для ${email}\n(пусто — как у всех: ${data.daily_limit})`, p.daily_limit ?? "");
+    if(d === null) return false;
+    const m = prompt(`$ в месяц для ${email}\n(пусто — как у всех: ${Number(data.monthly_usd)})`, p.monthly_usd ?? "");
+    if(m === null) return false;
+    const dn = d.trim() === "" ? null : parseInt(d, 10), mn = m.trim() === "" ? null : parseFloat(m.replace(",", "."));
+    if((dn !== null && !(dn >= 0)) || (mn !== null && !(mn >= 0))){ toast("Проверьте цифры"); return false; }
+    await call("admin_set_person_limits", {uid: id, daily: dn, monthly: mn, unlim: false});
+    return true;
   }
   async function saveThanks(){
     const c = $("#contactUrl").value.trim(), t = $("#thanksUrl").value.trim();
@@ -120,10 +178,11 @@ const Admin = (() => {
   }
   async function act(kind, id, email){
     try{
-      if(kind === "del"){
+      if(kind === "lim"){ if(!(await personLimits(id, email))) return; toast("Сохранил"); }
+      else if(kind === "del"){
         if(!confirm(`Удалить ${email}? Аккаунт и его списки удалятся навсегда, место освободится.`)) return;
         await call("admin_delete_user", {uid: id}); toast("Удалён");
-      } else {
+      } else if(kind === "on" || kind === "off"){
         if(kind === "off" && !confirm(`Отключить ${email}? Он не сможет пользоваться приложением, пока вы его не включите.`)) return;
         await call("admin_set_disabled", {uid: id, val: kind === "off"}); toast(kind === "off" ? "Отключён" : "Включён");
       }

@@ -5,5 +5,5 @@
 window.APP_CONFIG = {
   supabaseUrl: "https://ipqcqexoymvfoxejypyr.supabase.co",
   supabaseAnonKey: "sb_publishable_vt-_BHI13a_lgHbYJ4Hj8Q_JZnVFMRp",  // публичный ключ (publishable)
-  aiEnabled: false      // включим, когда заработает серверная функция ИИ (шаг 3)
+  aiEnabled: true       // подбор через серверную функцию ИИ (supabase/functions/ai в репозитории kino)
 };
