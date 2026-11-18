@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Что почитать</title>
 <meta name="description" content="Книги и аудиокниги, от которых не оторваться">
 <meta name="theme-color" content="#0f0d12">
@@ -32,6 +32,9 @@ html,body{background:var(--bg);color:var(--text);font-family:Manrope,system-ui,-
 body{min-height:100vh;padding-bottom:calc(40px + env(safe-area-inset-bottom));
   background:radial-gradient(120% 60% at 50% -10%,var(--glow) 0%,transparent 60%),var(--bg);background-repeat:no-repeat}
 button{-webkit-tap-highlight-color:transparent}
+/* без случайного увеличения: щипок и двойной тап не масштабируют, экран не уезжает вбок */
+html,body{touch-action:pan-x pan-y;overflow-x:hidden;overscroll-behavior-x:none}
+button,a,.chip,summary{touch-action:manipulation}
 @keyframes appear{from{opacity:0}to{opacity:1}}
 .wrap{animation:appear .22s ease-out both;max-width:560px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 16px 22px}
 h1{font-family:Unbounded,sans-serif;font-size:26px;letter-spacing:-.5px;line-height:1.1}
@@ -232,7 +235,7 @@ details.fold[open] .adm-fold[open]>summary .arr,.adm-fold[open]>summary .arr{tra
 .adm-alert{margin-top:10px;background:#3a1c1f;color:var(--bad);border-radius:10px;padding:9px 12px;font:600 14px Manrope,system-ui,sans-serif}
 .adm-ext{display:block;text-align:center;margin-top:10px;color:var(--later);font-size:14px;text-decoration:none}
 .left-note{color:var(--accent)!important}
-.adm-card input{margin-top:10px;font-size:15px}
+.adm-card input{margin-top:10px;font-size:16px}
 /* страница «Статистика» (только владелец) */
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:8px}
 .adm-card h3{font:700 15px Manrope,system-ui,sans-serif}

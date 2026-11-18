@@ -564,6 +564,11 @@ const TASTE_CFG = {
  ]
 };
 
+/* iPhone: запрет масштабирования щипком (Safari игнорирует запрет в настройках страницы) */
+["gesturestart","gesturechange"].forEach(t => document.addEventListener(t, e => e.preventDefault(), {passive:false}));
+let lastTouchEnd = 0;
+document.addEventListener("touchend", e => { const n = Date.now(); if(n - lastTouchEnd < 300 && !e.target.closest("button,a,input,textarea,select,summary,label")) e.preventDefault(); lastTouchEnd = n; }, {passive:false});
+
 /* ---------- запуск ---------- */
 function renderAll(){ $("#profile").value = state.profile; renderList(); renderNews(); }
 $("#surprise").innerHTML = IC("dice") + "<span>Удиви</span>";
