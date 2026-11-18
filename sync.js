@@ -234,7 +234,9 @@ const Sync = (() => {
       const {data} = await sb.rpc("touch");
       if(data === true){ disabled = true; applyGate(); return; }
       const o = await sb.rpc("is_owner");
-      const link = $("#adminLink"); if(link) link.classList.toggle("hidden", o.data !== true);
+      const own = o.data === true;
+      try{ own ? localStorage.setItem("kk-owner", "1") : localStorage.removeItem("kk-owner"); }catch(e){}
+      const link = $("#adminLink"); if(link) link.classList.toggle("hidden", !own);
     }catch(e){}
   }
   function renderAccount(){
@@ -254,6 +256,8 @@ const Sync = (() => {
     let stored = false; try{ stored = !!localStorage.getItem("kk-auth"); }catch(e){}
     document.body.classList.toggle("gated", !stored);
     if(!stored) showLogin(invite ? "signup" : "login", "", true);
+    // Ссылку «Статистика» показываем сразу, если раньше уже выяснили, что это владелец (сервер потом уточнит).
+    try{ if(stored && localStorage.getItem("kk-owner") === "1") $("#adminLink").classList.remove("hidden"); }catch(e){}
     document.body.classList.remove("auth-pending");
     sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {
       auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "kk-auth"}
@@ -268,6 +272,7 @@ const Sync = (() => {
       }
       if(event === "SIGNED_OUT"){
         disabled = false; const link = $("#adminLink"); if(link) link.classList.add("hidden");
+        try{ localStorage.removeItem("kk-owner"); }catch(e){}
         if(window.Admin) Admin.close();
         try{ localStorage.removeItem(SNAP); }catch(e){}
         state.items = []; state.profile = "";

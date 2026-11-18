@@ -126,7 +126,6 @@ details.fold[open] summary{margin-bottom:2px}
 details.fold.sec{margin-top:10px}
 .ic{width:18px;height:18px;flex-shrink:0;vertical-align:-3px}
 .foot{margin-top:34px;text-align:center;font-size:13px;color:var(--muted)}
-body.admin-open #adminLink{display:none}
 .foot button{background:none;border:0;color:var(--later);font:inherit;cursor:pointer;padding:6px}
 /* вход и синхронизация */
 .acc-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:12px;font-size:14px;color:var(--muted)}
@@ -150,14 +149,7 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 .lg-err:empty{display:none}
 .lg-note{font-size:13px!important;margin-top:14px!important}
 /* страница «Статистика» (только владелец) */
-#admin{display:none}
-body.admin-open #admin{display:block}
-body.admin-open #main,body.admin-open #gate{display:none!important}
-.adm-head{display:flex;align-items:center;gap:10px;margin:18px 0 6px}
-.adm-head h2{font-family:Unbounded,sans-serif;font-weight:500;font-size:21px}
-.adm-head button{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.adm-head button .ic{transform:rotate(90deg);width:20px;height:20px}
-.adm-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px}
+.adm-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:8px}
 .adm-card h3{font:700 15px Manrope,system-ui,sans-serif}
 .adm-card h3 small{color:var(--muted);font-weight:500;margin-left:4px}
 .adm-note{color:var(--muted);font-size:13px;margin-top:8px}
@@ -269,13 +261,16 @@ body.admin-open #main,body.admin-open #gate{display:none!important}
       <textarea id="profile" style="margin-top:10px" placeholder="Что любите, что не любите, что бросили и почему…"></textarea>
       <button class="btn ghost" id="saveProfile" style="margin-top:8px;width:100%">Сохранить</button>
     </details>
+
+    <details class="sec fold hidden" id="adminLink">
+      <summary><h2><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Статистика <small>видите только вы</small><span class="arr"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></h2></summary>
+      <div id="admin"></div>
+    </details>
   </section>
 
   </div>
 
-  <section id="admin"></section>
-
-  <div class="foot"><button id="howInstall">Как установить на телефон</button><button id="adminLink" class="hidden">Статистика</button></div>
+  <div class="foot"><button id="howInstall">Как установить на телефон</button></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="sheet"></div>

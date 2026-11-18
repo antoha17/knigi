@@ -1,4 +1,4 @@
-/* Страница «Статистика» — только для владельца.
+/* Раздел «Статистика» в «Моём списке» — только для владельца.
    Ссылка на неё видна только владельцу, а все данные сервер отдаёт только ему (функции admin_* в базе).
    Файл одинаковый в обоих приложениях. Сейчас: места, ссылки-приглашения, люди.
    На шаге 3 сюда добавятся затраты на ИИ, лимиты и выбор модели. */
@@ -33,11 +33,9 @@ const Admin = (() => {
   }
   async function load(){
     try{ data = await call("admin_overview"); render(); }
-    catch(e){ $("#admin").innerHTML = head() + `<div class="status">Не удалось загрузить. Проверьте интернет и попробуйте ещё раз.</div>`; bindHead(); }
+    catch(e){ $("#admin").innerHTML = `<div class="status">Не удалось загрузить. Проверьте интернет и попробуйте ещё раз.</div>`; }
   }
 
-  const head = () => `<div class="adm-head"><button id="admBack" aria-label="Назад">${IC("chev",2)}</button><h2>Статистика</h2></div>`;
-  function bindHead(){ $("#admBack").onclick = close; }
 
   function render(){
     const free = Math.max(0, data.seats - data.used);
@@ -46,7 +44,7 @@ const Admin = (() => {
         <div class="adm-pt">
           <b>${esc(p.email || "")}</b>${p.is_owner ? ` <span class="adm-badge">это вы</span>` : ""}${p.disabled ? ` <span class="adm-badge off">отключён</span>` : ""}
           <div>${since(p.created_at)} · ${p.last_seen ? "заходил " + when(p.last_seen) : "ещё не заходил"}</div>
-          <div>в списках: фильмов ${p.kino}, книг ${p.knigi}</div>
+          <div>записей: кино&nbsp;${p.kino} · книги&nbsp;${p.knigi}</div>
         </div>
         ${p.is_owner ? "" : `<div class="adm-pa">
           <button data-act="${p.disabled ? "on" : "off"}" data-id="${p.id}" data-email="${esc(p.email || "")}">${p.disabled ? "Включить" : "Отключить"}</button>
@@ -54,7 +52,7 @@ const Admin = (() => {
         </div>`}
       </div>`).join("");
     const canShare = !!navigator.share;
-    $("#admin").innerHTML = head() + `
+    $("#admin").innerHTML = `
       <div class="adm-card">
         <h3>Места</h3>
         <div class="adm-seats">
@@ -75,7 +73,6 @@ const Admin = (() => {
         ${people}
       </div>
       <p class="adm-note adm-soon">Скоро здесь появятся затраты на ИИ по каждому человеку, лимиты и выбор модели.</p>`;
-    bindHead();
     $("#seatMinus").onclick = () => setSeats(data.seats - 1);
     $("#seatPlus").onclick = () => setSeats(data.seats + 1);
     $("#newInvite").onclick = newInvite;
@@ -114,14 +111,14 @@ const Admin = (() => {
     }catch(e){ toast("Не получилось, попробуйте ещё раз"); }
   }
 
+  // Данные загружаются заново при каждом раскрытии раздела.
   function open(){
-    document.body.classList.add("admin-open");
-    $("#admin").innerHTML = head() + `<div class="status"><span class="dots">Загружаю</span></div>`;
-    bindHead(); window.scrollTo({top: 0}); load();
+    $("#admin").innerHTML = `<div class="status"><span class="dots">Загружаю</span></div>`;
+    load();
   }
-  function close(){ document.body.classList.remove("admin-open"); $("#admin").innerHTML = ""; window.scrollTo({top: 0}); }
+  function close(){ const box = $("#adminLink"); if(box) box.open = false; $("#admin").innerHTML = ""; }
 
   return {open, close};
 })();
 window.Admin = Admin;
-$("#adminLink").onclick = () => Admin.open();
+$("#adminLink").addEventListener("toggle", e => { if(e.target.open) Admin.open(); });
