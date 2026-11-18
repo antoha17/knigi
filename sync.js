@@ -116,7 +116,7 @@ const Sync = (() => {
 
   /* ---------- вход по почте и паролю ---------- */
   function errText(e){
-    const m = String((e && (e.code || e.message)) || "").toLowerCase();
+    const m = ((e && e.code || "") + " " + (e && e.message || "")).toLowerCase();
     if(m.includes("invite_required")) return "Регистрация только по приглашению. Попросите новую ссылку у того, кто дал приложение";
     if(m.includes("no_seats")) return "Свободных мест нет. Напишите тому, кто дал вам ссылку";
     if(m.includes("invalid_credentials") || m.includes("invalid login")) return "Неверная почта или пароль";
