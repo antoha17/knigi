@@ -353,7 +353,7 @@ function renderList(){
     } else if(k==="later"){
       body = arr.length ? arr.map(i=>`<div class="row stack"><div class="top"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
         <div>${sub(i)}${i.hook?" · "+esc(i.hook):""}</div></div>
-        <div class="mini">${del(i)}</div></div><div class="later-acts"><button ${t(i)} data-k="watching">${IC("book")}<span>Читаю</span></button><button ${t(i)} data-k="liked">${IC("up")}<span>Понравилось</span></button><button ${t(i)} data-k="disliked">${IC("down")}<span>Не моё</span></button></div>${links(i,true)}</div>`).join("")
+        <div class="mini"><button ${t(i)} data-k="watching" class="start" title="Перенести в «Читаю сейчас»"><span>Начать</span></button><button ${t(i)} data-k="liked" title="Понравилось" aria-label="Понравилось">${IC("up")}</button><button ${t(i)} data-k="disliked" title="Не моё" aria-label="Не моё">${IC("down")}</button>${del(i)}</div></div>${links(i,true)}</div>`).join("")
         : `<div class="empty">Пока пусто. Добавляйте из подборок или то, что посоветовали</div>`;
     } else {
       body = arr.map(i=>`<div class="row"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
@@ -383,7 +383,7 @@ $("#lists").addEventListener("click",e=>{
     showTab("pick"); pick(false); return;
   }
   setVerdict({title:b.dataset.t}, k);
-  toast(k==="watching"?"Отлично, слежу за прогрессом":"Запомнил");
+  toast(k==="watching"?"Перенёс в «Читаю сейчас»":k==="liked"?"Перенёс в «Понравилось»":k==="disliked"?"Перенёс в «Не зашло»":"Запомнил");
 });
 
 /* ---------- быстро добавить (текст; голос — через микрофон на клавиатуре телефона) ---------- */
