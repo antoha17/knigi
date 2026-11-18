@@ -69,9 +69,10 @@ const Admin = (() => {
         <p class="adm-note">Если ссылка ушла не туда, нажмите «Новая ссылка»: старая перестанет пускать новых людей. Кто уже зарегистрирован, пользуется как раньше.</p>
       </div>
       <div class="adm-card">
-        <h3>Благодарность</h3>
-        <p class="adm-note">Ссылка на вашу страницу приёма денег (CloudTips, ЮMoney). Пока ссылки нет, строка «Поблагодарить автора» никому не видна.</p>
-        <input id="thanksUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://pay.cloudtips.ru/p/…" value="${esc(data.thanks_url || "")}">
+        <h3>Связь с автором</h3>
+        <p class="adm-note">Ссылки для строки «Автор» внизу «Моего списка». Кнопка видна, только если ссылка задана.</p>
+        <input id="contactUrl" type="url" inputmode="url" autocomplete="off" placeholder="Telegram: https://t.me/ваш_ник" value="${esc(data.contact_url || "")}">
+        <input id="thanksUrl" type="url" inputmode="url" autocomplete="off" placeholder="Оплата: https://pay.cloudtips.ru/p/…" value="${esc(data.thanks_url || "")}" style="margin-top:8px">
         <button class="btn ghost adm-wide" id="thanksSave">Сохранить</button>
       </div>
       <div class="adm-card">
@@ -92,10 +93,16 @@ const Admin = (() => {
     try{ await call("admin_set_seats", {n}); data.seats = n; render(); }catch(e){ toast("Не получилось, попробуйте ещё раз"); }
   }
   async function saveThanks(){
-    const url = $("#thanksUrl").value.trim();
-    if(url && !/^https:\/\/\S+$/i.test(url)){ toast("Ссылка должна начинаться с https://"); return; }
-    try{ await call("admin_set_thanks", {url}); data.thanks_url = url || null; Sync.setThanks(data.thanks_url); toast(url ? "Сохранил, строка «Поблагодарить» появилась" : "Ссылка убрана"); }
-    catch(e){ toast("Не получилось сохранить. Проверьте ссылку"); }
+    const c = $("#contactUrl").value.trim(), t = $("#thanksUrl").value.trim();
+    const bad = u => u && !/^https:\/\/\S+$/i.test(u);
+    if(bad(c) || bad(t)){ toast("Ссылка должна начинаться с https://"); return; }
+    try{
+      await call("admin_set_contact", {url: c});
+      await call("admin_set_thanks", {url: t});
+      data.contact_url = c || null; data.thanks_url = t || null;
+      Sync.setLinks({contact_url: data.contact_url, thanks_url: data.thanks_url});
+      toast("Сохранил");
+    }catch(e){ toast("Не получилось сохранить. Проверьте ссылки"); }
   }
   async function newInvite(){
     if(!confirm("Сделать новую ссылку? Старая перестанет пускать новых людей.")) return;
