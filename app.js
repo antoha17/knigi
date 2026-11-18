@@ -259,9 +259,9 @@ function maybeThanksCard(){
   let picks = 0, last = 0;
   try{ picks = +localStorage.getItem(PICKS_KEY) || 0; last = +localStorage.getItem(THANKS_KEY) || 0; }catch(e){}
   if(picks < 10 || Date.now() - last < 30 * 864e5) return;
-  $("#results").insertAdjacentHTML("beforeend", `<div class="thanks-card">${IC("heart")}<div class="tc-t"><b>Нравятся подборки?</b><p>Можно поблагодарить автора. Это помогает приложению работать дальше.</p><a href="${esc(link.href)}" target="_blank" rel="noopener" id="tcGo">Поблагодарить</a></div><button class="tc-x" id="tcX" aria-label="Закрыть">${IC("x")}</button></div>`);
+  $("#results").insertAdjacentHTML("beforeend", `<div class="thanks-card">${IC("heart")}<div class="tc-t"><b>Нравятся подборки?</b><p>Можно поблагодарить автора. Это помогает приложению работать дальше.</p><a href="#" id="tcGo">Поблагодарить</a></div><button class="tc-x" id="tcX" aria-label="Закрыть">${IC("x")}</button></div>`);
   const done = () => { try{ localStorage.setItem(THANKS_KEY, String(Date.now())); }catch(e){} const c=$(".thanks-card"); if(c) c.remove(); };
-  $("#tcX").onclick = done; $("#tcGo").addEventListener("click", () => setTimeout(done, 300));
+  $("#tcX").onclick = done; $("#tcGo").addEventListener("click", e => { e.preventDefault(); $("#thanksLink").click(); setTimeout(done, 300); });
 }
 $("#go").onclick=()=>pick(false);
 $("#surprise").onclick=()=>pick(true);

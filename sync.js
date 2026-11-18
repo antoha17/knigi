@@ -235,10 +235,42 @@ const Sync = (() => {
     l = l || {};
     const good = u => typeof u === "string" && /^https:\/\/\S+$/i.test(u);
     const put = (id, u) => { const a = $(id); if(!a) return false; a.classList.toggle("hidden", !good(u)); if(good(u)) a.href = u; return good(u); };
-    const c = put("#contactLink", l.contact_url), t = put("#thanksLink", l.thanks_url);
+    const c = put("#contactLink", l.contact_url);
+    // «Поблагодарить»: ссылка на оплату, а если её нет — перевод по СБП (окно с номером).
+    let t = put("#thanksLink", l.thanks_url);
+    window.SBP = l.sbp_phone ? {phone: l.sbp_phone, bank: l.sbp_bank || ""} : null;
+    const ta = $("#thanksLink");
+    if(ta){ ta.dataset.sbp = !t && window.SBP ? "1" : ""; if(!t && window.SBP){ ta.classList.remove("hidden"); ta.href = "#"; t = true; } }
     const row = $("#authorRow"); if(row) row.classList.toggle("hidden", !c && !t);
-    try{ (c || t) ? localStorage.setItem("kk-links", JSON.stringify({contact_url: l.contact_url || null, thanks_url: l.thanks_url || null})) : localStorage.removeItem("kk-links"); }catch(e){}
+    try{ (c || t) ? localStorage.setItem("kk-links", JSON.stringify({contact_url: l.contact_url || null, thanks_url: l.thanks_url || null, sbp_phone: l.sbp_phone || null, sbp_bank: l.sbp_bank || null})) : localStorage.removeItem("kk-links"); }catch(e){}
   }
+  // Окно «Поблагодарить» переводом по СБП.
+  function showSbp(){
+    const x = window.SBP; if(!x) return;
+    const d = x.phone, nice = `+${d[0]} ${d.slice(1,4)} ${d.slice(4,7)}-${d.slice(7,9)}-${d.slice(9,11)}`;
+    $("#sheet").innerHTML = `<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sbpTitle">
+      <h3 id="sbpTitle">Поблагодарить автора</h3>
+      <p>Перевод по номеру телефона через СБП, без комиссии. Сумма любая.</p>
+      <div class="sbp-num">${esc(nice)}</div>
+      ${x.bank ? `<div class="sbp-bank">Банк получателя: ${esc(x.bank)}</div>` : ""}
+      <div class="btns"><button class="btn main" id="sbpCopy">Скопировать номер</button></div>
+      <ol><li><span>Откройте приложение своего банка.</span></li><li><span>Переводы → «По номеру телефона» (СБП).</span></li><li><span>Вставьте номер${x.bank ? `, выберите «${esc(x.bank)}»` : ""} и укажите сумму.</span></li></ol>
+      <div class="btns"><button class="btn ghost" style="flex:1" id="sbpClose">Закрыть</button></div>
+    </div></div>`;
+    const close = () => { $("#sheet").innerHTML = ""; };
+    $(".sheet-bg").onclick = e => { if(e.target.classList.contains("sheet-bg")) close(); };
+    $("#sbpClose").onclick = close;
+    $("#sbpCopy").onclick = async () => {
+      const txt = "+" + d;
+      try{ await navigator.clipboard.writeText(txt); }
+      catch(e){ const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); }catch(_){} t.remove(); }
+      $("#sbpCopy").textContent = "Номер скопирован";
+    };
+  }
+  document.addEventListener("click", e => {
+    const a = e.target.closest("#thanksLink");
+    if(a && a.dataset.sbp === "1"){ e.preventDefault(); showSbp(); }
+  });
   // При каждом открытии: отмечаем «заходил», узнаём, не отключён ли доступ и не владелец ли это.
   async function afterLogin(){
     try{

@@ -96,7 +96,12 @@ const Admin = (() => {
         <h3>Связь с автором</h3>
         <p class="adm-note">Ссылки для строки «Автор» внизу «Моего списка». Кнопка видна, только если ссылка задана.</p>
         <input id="contactUrl" type="url" inputmode="url" autocomplete="off" placeholder="Telegram: https://t.me/ваш_ник" value="${esc(data.contact_url || "")}">
-        <input id="thanksUrl" type="url" inputmode="url" autocomplete="off" placeholder="Оплата: https://pay.cloudtips.ru/p/…" value="${esc(data.thanks_url || "")}" style="margin-top:8px">
+        <div class="label">Поблагодарить: перевод по СБП</div>
+        <input id="sbpPhone" type="tel" inputmode="tel" autocomplete="off" placeholder="Номер телефона, +7 …" value="${esc(data.sbp_phone ? "+" + data.sbp_phone : "")}">
+        <input id="sbpBank" autocomplete="off" placeholder="Банк, например Т-Банк" value="${esc(data.sbp_bank || "")}" style="margin-top:8px">
+        <div class="label">или ссылка на страницу оплаты</div>
+        <input id="thanksUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://pay.cloudtips.ru/p/…" value="${esc(data.thanks_url || "")}">
+        <p class="adm-note">Номер виден только вошедшим людям, в открытом коде его нет. Если указана ссылка, кнопка открывает её вместо СБП.</p>
         <button class="btn ghost adm-wide" id="thanksSave">Сохранить</button>
       </div>
       <div class="adm-card">
@@ -193,8 +198,11 @@ const Admin = (() => {
     try{
       await call("admin_set_contact", {url: c});
       await call("admin_set_thanks", {url: t});
-      data.contact_url = c || null; data.thanks_url = t || null;
-      Sync.setLinks({contact_url: data.contact_url, thanks_url: data.thanks_url});
+      const ph = $("#sbpPhone").value.trim(), bank = $("#sbpBank").value.trim();
+      try{ await call("admin_set_sbp", {phone: ph, bank}); }
+      catch(e){ toast("Проверьте номер: нужно 11 цифр, например +7 912 345-67-89"); return; }
+      await load();
+      Sync.setLinks({contact_url: data.contact_url, thanks_url: data.thanks_url, sbp_phone: data.sbp_phone, sbp_bank: data.sbp_bank});
       toast("Сохранил");
     }catch(e){ toast("Не получилось сохранить. Проверьте ссылки"); }
   }
