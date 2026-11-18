@@ -640,8 +640,8 @@ document.addEventListener("touchend", e => { const n = Date.now(); if(n - lastTo
 /* Инструкция: открывается прямо в приложении (картинки страниц), без перехода во внешний просмотрщик */
 $("#helpBtn").onclick = () => {
   const box = document.createElement("div"); box.className = "help-view";
-  box.innerHTML = [1,2,3].map(n => `<img src="help/p-${n}.jpg" alt="Инструкция, страница ${n}" loading="lazy">`).join("") +
-    `<button class="help-close" aria-label="Закрыть">${IC("x")}</button>`;
+  box.innerHTML = `<div class="status"><span class="dots">Загружаю</span></div><button class="help-close" aria-label="Закрыть">${IC("x")}</button>`;
+  fetch("help/help.html").then(r => r.text()).then(t => { box.querySelector(".status").outerHTML = t; }).catch(() => { box.querySelector(".status").textContent = "Нет связи. Попробуйте позже"; });
   document.body.appendChild(box); document.body.style.overflow = "hidden";
   box.querySelector(".help-close").onclick = () => { box.remove(); document.body.style.overflow = ""; };
 };
