@@ -276,6 +276,7 @@ const Sync = (() => {
     try{
       const {data} = await sb.rpc("touch");
       if(data === true){ disabled = true; applyGate(); return; }
+      if(typeof window.onLogin === "function") window.onLogin(sb);
       const ps = await sb.rpc("public_settings");
       if(!ps.error) setLinks(ps.data);
       const o = await sb.rpc("is_owner");

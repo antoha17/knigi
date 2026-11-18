@@ -109,6 +109,12 @@ const Admin = (() => {
         ${people}
       </div>
       <div class="adm-card">
+        <h3>Новинки и копия</h3>
+        <p class="adm-note" id="svcInfo">Новинки недели обновляются сами каждую пятницу утром, резервная копия делается каждое воскресенье.</p>
+        <button class="btn ghost adm-wide" id="newsNow">Обновить новинки сейчас</button>
+        <button class="btn ghost adm-wide" id="exportNow">Скачать резервную копию</button>
+      </div>
+      <div class="adm-card">
         <h3>Проверка</h3>
         <p class="adm-note">Показать анкету «Мой вкус», как её видят новые люди. Ваш вкус заменится, только если в конце нажать «Всё верно».</p>
         <button class="btn ghost adm-wide" id="onbAgain">Пройти анкету заново</button>
@@ -121,6 +127,12 @@ const Admin = (() => {
     $("#aiModel").onclick = e => { const c = e.target.closest("[data-m]"); if(!c) return; $("#aiModel").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c)); };
     $("#aiSave").onclick = saveAi;
     $("#balSave").onclick = saveBalance;
+    $("#newsNow").onclick = newsNow;
+    $("#exportNow").onclick = exportNow;
+    call("admin_backups").then(b => {
+      const f = ts => ts ? new Date(ts).toLocaleDateString("ru-RU", {day: "numeric", month: "long"}) : "ещё не было";
+      const el = $("#svcInfo"); if(el && b) el.textContent = `Новинки обновляются каждую пятницу (последние: ${f(b.news_last)}). Резервная копия каждое воскресенье, хранятся последние 8 (последняя: ${f(b.last)}).`;
+    }).catch(() => {});
     $("#onbAgain").onclick = () => { if(window.Taste) Taste.showQuestions(); };
     $("#aiTest").onclick = testModel;
     $("#admin").querySelectorAll("[data-share]").forEach(b => b.onclick = () => share(b.dataset.share, b));
@@ -223,6 +235,28 @@ const Admin = (() => {
     if((dn !== null && !(dn >= 0)) || (mn !== null && !(mn >= 0))){ toast("Проверьте цифры"); return false; }
     await call("admin_set_person_limits", {uid: id, daily: dn, monthly: mn, unlim: false});
     return true;
+  }
+  async function newsNow(){
+    const btn = $("#newsNow"); btn.disabled = true; btn.textContent = "Ищу новинки… до минуты";
+    try{
+      const r = await fetch(CFG.supabaseUrl.replace(/\/$/, "") + "/functions/v1/news", {method: "POST",
+        headers: {"Content-Type": "application/json", apikey: CFG.supabaseAnonKey, Authorization: "Bearer " + Sync.token()}, body: "{}"});
+      const j = await r.json().catch(() => ({}));
+      if(!r.ok) throw j;
+      toast(`Готово: ${j.count} новинки`);
+      if(window.onLogin) window.onLogin(sb());
+    }catch(e){ toast("Не получилось" + (e && e.code ? ` (${e.code})` : "")); }
+    finally{ btn.disabled = false; btn.textContent = "Обновить новинки сейчас"; }
+  }
+  async function exportNow(){
+    try{
+      const d = await call("admin_export");
+      const blob = new Blob([JSON.stringify(d, null, 1)], {type: "application/json"});
+      const name = "kino-knigi-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+      const file = new File([blob], name, {type: "application/json"});
+      if(navigator.canShare && navigator.canShare({files: [file]})){ await navigator.share({files: [file], title: name}); return; }
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    }catch(e){ if(!(e && e.name === "AbortError")) toast("Не получилось скачать"); }
   }
   async function saveThanks(){
     const c = $("#contactUrl").value.trim(), t = $("#thanksUrl").value.trim();
