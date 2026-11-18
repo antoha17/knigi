@@ -351,7 +351,7 @@ function rateRow(i){
   const t = `data-t="${esc(i.title)}"`;
   return `<div class="rate"><span>Как вам?</span><button ${t} data-k="fin-up">${IC("up")}Понравилось</button><button ${t} data-k="fin-down">${IC("down")}Не зашло</button></div>`;
 }
-const EMPTY = {"watching": "Отметьте книгу «Читаю», и здесь будет прогресс в процентах", "liked": "Здесь будут книги, которые понравились", "disliked": "Здесь будет то, что не понравилось. Такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
+const EMPTY = {"watching": "Здесь будут книги, которые вы читаете или слушаете", "liked": "Здесь будут книги, которые понравились", "disliked": "Здесь будет то, что не понравилось. Такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
 
 function renderList(){
   const later = state.items.filter(i=>i.verdict==="later").length;
@@ -376,10 +376,7 @@ function renderList(){
       <div class="row watch"><div class="top"><div class="t"><b>${esc(i.title)}</b>${(i.author||i.note)?`<div>${esc([i.author,i.note].filter(Boolean).join(" · "))}</div>`:""}</div>
         <div class="mini">${del(i)}</div></div>
         <div class="mode"><button ${t(i)} data-k="mode-read" class="${i.audio?"":"on"}">${IC("book")}Читаю</button><button ${t(i)} data-k="mode-audio" class="${i.audio?"on":""}">${IC("head")}Слушаю</button></div>
-        <div class="bar"><i style="width:${i.progress||0}%"></i></div>
-        <div class="prog"><span class="pv">${i.audio?"Прослушано":"Прочитано"} ${i.progress||0}%</span>
-          <button ${t(i)} data-k="ep-">−10%</button><button ${t(i)} data-k="ep+">+10%</button>
-          <button class="fin" ${t(i)} data-k="ask">${IC("check")}Дочитал</button></div>${asking.has(norm(i.title))?rateRow(i):""}</div>`).join("");
+        <div class="prog"><button class="fin" ${t(i)} data-k="ask">${IC("check")}${i.audio?"Дослушал":"Дочитал"}</button></div>${asking.has(norm(i.title))?rateRow(i):""}</div>`).join("");
     } else if(k==="later"){
       body = arr.length ? arr.map(i=>`<div class="row stack"><div class="top"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
         <div>${sub(i)}${i.hook?" · "+esc(i.hook):""}</div></div>
