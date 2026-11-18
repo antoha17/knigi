@@ -398,7 +398,9 @@ async function quickAdd(){
   btn.disabled=false; btn.classList.remove("busy");
   toast(`«${rec.title}» → ${VERD[v]}`);
 }
-$("#addBtn").onclick=quickAdd;
+// «+» при пустом поле — ставит курсор в поле (как будто нажали на поле); с текстом — добавляет.
+$("#addBtn").onclick=()=>{ if(!$("#quick").value.trim()){ $("#quick").focus(); return; } quickAdd(); };
+document.querySelector(".add-card").addEventListener("click",e=>{ if(!e.target.closest("button")) $("#quick").focus(); });
 $("#quick").addEventListener("keydown",e=>{if(e.key==="Enter")quickAdd()});
 
 $("#saveProfile").onclick=()=>{state.profile=$("#profile").value.trim();save();toast("Сохранил")};
