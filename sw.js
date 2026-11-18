@@ -3,7 +3,7 @@
    приложения меняется номер CACHE ниже, телефон замечает новый sw.js, заранее скачивает свежие файлы
    и app.js один раз тихо перезагружает страницу.
    ВАЖНО: при любом изменении файлов приложения увеличивать номер версии в CACHE. */
-const CACHE = "knigi-v21";
+const CACHE = "knigi-v22";
 const SHELL = ["./", "index.html", "app.js", "config.js", "sync.js", "admin.js", "vendor/supabase.js", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png",
   "fonts/manrope-cyrillic-wght-normal.woff2", "fonts/manrope-latin-wght-normal.woff2",
