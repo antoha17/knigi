@@ -95,10 +95,7 @@ textarea{min-height:110px;resize:vertical}
 .note{font-size:13px;color:var(--muted);margin-top:8px}
 .hidden{display:none!important}
 .quick{display:flex;gap:8px}
-.mic{flex-shrink:0;width:50px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.mic.rec{background:var(--accent2);border-color:var(--accent2);animation:pulse 1s infinite}
-@keyframes pulse{50%{opacity:.6}}
-.mic .ic,#surprise .ic{width:22px;height:22px}
+#surprise .ic{width:22px;height:22px}
 #surprise{display:flex;align-items:center;justify-content:center}
 .newshead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
 .newshead h2{font:700 17px Manrope,system-ui,sans-serif;display:flex;align-items:center;gap:8px}
@@ -191,10 +188,9 @@ details.fold.sec{margin-top:10px}
       <div class="add">
         <div class="quick">
           <input id="quick" placeholder="Например: посоветовали «Три товарища»" autocomplete="off">
-          <button class="mic hidden" id="mic" title="Сказать голосом" aria-label="Сказать голосом"></button>
         </div>
         <button class="btn ghost" id="addBtn">Добавить</button>
-        <div class="note" id="micHint">Можно надиктовать: нажмите микрофон на клавиатуре телефона и скажите, что посоветовали или что начали читать.</div>
+        <div class="note">Можно надиктовать: нажмите микрофон на клавиатуре телефона и скажите, что посоветовали или что начали читать.</div>
       </div>
     </div>
     <div id="lists"></div>

@@ -33,7 +33,6 @@ const P = {
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
   target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
-  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
   dice:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/>',
   film:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>',
   book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
@@ -350,7 +349,7 @@ $("#lists").addEventListener("click",e=>{
   toast(k==="watching"?"Отлично, слежу за прогрессом":"Запомнил");
 });
 
-/* ---------- быстро добавить (текст или голос) ---------- */
+/* ---------- быстро добавить (текст; голос — через микрофон на клавиатуре телефона) ---------- */
 async function quickAdd(){
   const text=$("#quick").value.trim(); if(!text) return;
   const btn=$("#addBtn"); btn.disabled=true; btn.textContent="Разбираю…";
@@ -373,24 +372,6 @@ async function quickAdd(){
 }
 $("#addBtn").onclick=quickAdd;
 $("#quick").addEventListener("keydown",e=>{if(e.key==="Enter")quickAdd()});
-
-/* Голос: встроенное распознавание браузера, если оно есть. Иначе — подсказка про микрофон на клавиатуре. */
-(function setupMic(){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const mic = $("#mic"); mic.innerHTML = IC("mic");
-  if(!SR) return;
-  let rec = null;
-  mic.classList.remove("hidden"); $("#micHint").classList.add("hidden");
-  mic.onclick = () => {
-    if(rec){ rec.stop(); return; }
-    rec = new SR(); rec.lang = "ru-RU"; rec.interimResults = true; rec.continuous = false;
-    const q = $("#quick"), before = q.value ? q.value.trimEnd()+" " : "";
-    rec.onresult = ev => { let s=""; for(const r of ev.results) s += r[0].transcript; q.value = before + s.trimStart(); };
-    rec.onerror = ev => { if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){ mic.classList.add("hidden"); $("#micHint").classList.remove("hidden"); } };
-    rec.onend = () => { rec = null; mic.classList.remove("rec"); };
-    try{ rec.start(); mic.classList.add("rec"); }catch(e){ rec = null; }
-  };
-})();
 
 $("#saveProfile").onclick=()=>{state.profile=$("#profile").value.trim();save();toast("Сохранил")};
 
