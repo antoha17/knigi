@@ -615,7 +615,8 @@ document.addEventListener("touchend", e => { const n = Date.now(); if(n - lastTo
     if(d.open){
       d.dataset.backY = String(window.scrollY);
       requestAnimationFrame(() => {
-        const top = d.getBoundingClientRect().top + window.scrollY - 10;
+        const safe = parseFloat(getComputedStyle(d.querySelector("summary")).top) || 6;
+        const top = d.getBoundingClientRect().top + window.scrollY - safe;
         // поднимаем, только если раскрытое не помещается на экране
         if(d.getBoundingClientRect().bottom > window.innerHeight) window.scrollTo({top, behavior: "smooth"});
       });
