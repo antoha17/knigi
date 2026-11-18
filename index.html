@@ -148,6 +148,13 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 .lg-err{color:var(--bad)!important;margin-top:10px!important}
 .lg-err:empty{display:none}
 .lg-note{font-size:13px!important;margin-top:14px!important}
+/* «Поблагодарить автора» */
+.thanks-row{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px;color:var(--text);font:700 15px Manrope,system-ui,sans-serif;text-decoration:none}
+.thanks-row.sec{margin-top:10px}
+.thanks-row .ic{width:19px;height:19px;color:var(--accent)}
+.thanks-row span{flex:1}
+.thanks-row .arr-r{color:var(--muted);width:17px;height:17px}
+.adm-card input{margin-top:10px;font-size:15px}
 /* страница «Статистика» (только владелец) */
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:8px}
 .adm-card h3{font:700 15px Manrope,system-ui,sans-serif}
@@ -261,6 +268,12 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
       <textarea id="profile" style="margin-top:10px" placeholder="Что любите, что не любите, что бросили и почему…"></textarea>
       <button class="btn ghost" id="saveProfile" style="margin-top:8px;width:100%">Сохранить</button>
     </details>
+
+    <a class="sec thanks-row hidden" id="thanksLink" href="#" target="_blank" rel="noopener">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.6C1.3 8.5 2.9 5 6.3 5c2 0 3.2 1.1 3.9 2.1L12 9l1.8-1.9C14.5 6.1 15.7 5 17.7 5c3.4 0 5 3.5 3.5 6.4C19 15.6 12 20 12 20z"/></svg>
+      <span>Поблагодарить автора</span>
+      <svg class="ic arr-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>
+    </a>
 
     <details class="sec fold hidden" id="adminLink">
       <summary><h2><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Статистика<span class="arr"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></h2></summary>

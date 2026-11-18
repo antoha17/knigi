@@ -228,11 +228,21 @@ const Sync = (() => {
     $("#gate").innerHTML = `<div class="gate-card"><h3>Доступ отключён</h3><p>Владелец приложения отключил вам доступ. Если это ошибка, напишите ему.</p><div class="btns"><button class="btn ghost" style="flex:1" id="disOut">Выйти</button></div></div>`;
     $("#disOut").onclick = async () => { try{ await sb.auth.signOut(); }catch(e){} };
   }
+  // Строка «Поблагодарить автора»: показываем, только если владелец задал ссылку.
+  function setThanks(url){
+    const a = $("#thanksLink"); if(!a) return;
+    const ok = typeof url === "string" && /^https:\/\//i.test(url);
+    a.classList.toggle("hidden", !ok);
+    if(ok) a.href = url;
+    try{ ok ? localStorage.setItem("kk-thanks", url) : localStorage.removeItem("kk-thanks"); }catch(e){}
+  }
   // При каждом открытии: отмечаем «заходил», узнаём, не отключён ли доступ и не владелец ли это.
   async function afterLogin(){
     try{
       const {data} = await sb.rpc("touch");
       if(data === true){ disabled = true; applyGate(); return; }
+      const ps = await sb.rpc("public_settings");
+      if(!ps.error) setThanks(ps.data && ps.data.thanks_url);
       const o = await sb.rpc("is_owner");
       const own = o.data === true;
       try{ own ? localStorage.setItem("kk-owner", "1") : localStorage.removeItem("kk-owner"); }catch(e){}
@@ -258,6 +268,7 @@ const Sync = (() => {
     if(!stored) showLogin(invite ? "signup" : "login", "", true);
     // Ссылку «Статистика» показываем сразу, если раньше уже выяснили, что это владелец (сервер потом уточнит).
     try{ if(stored && localStorage.getItem("kk-owner") === "1") $("#adminLink").classList.remove("hidden"); }catch(e){}
+    try{ if(stored) setThanks(localStorage.getItem("kk-thanks")); }catch(e){}
     document.body.classList.remove("auth-pending");
     sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {
       auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "kk-auth"}
@@ -273,6 +284,7 @@ const Sync = (() => {
       if(event === "SIGNED_OUT"){
         disabled = false; const link = $("#adminLink"); if(link) link.classList.add("hidden");
         try{ localStorage.removeItem("kk-owner"); }catch(e){}
+        setThanks(null);
         if(window.Admin) Admin.close();
         try{ localStorage.removeItem(SNAP); }catch(e){}
         state.items = []; state.profile = "";
@@ -292,7 +304,7 @@ const Sync = (() => {
     renderAccount();
   }
 
-  return {init, schedule, flush, pull, showLogin, token: () => session && session.access_token, user, client: () => sb};
+  return {init, schedule, flush, pull, showLogin, setThanks, token: () => session && session.access_token, user, client: () => sb};
 })();
 window.Sync = Sync;
 window.Auth = {token: () => Sync.token()};

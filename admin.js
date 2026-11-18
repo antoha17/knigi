@@ -69,6 +69,12 @@ const Admin = (() => {
         <p class="adm-note">Если ссылка ушла не туда, нажмите «Новая ссылка»: старая перестанет пускать новых людей. Кто уже зарегистрирован, пользуется как раньше.</p>
       </div>
       <div class="adm-card">
+        <h3>Благодарность</h3>
+        <p class="adm-note">Ссылка на вашу страницу приёма денег (CloudTips, ЮMoney). Пока ссылки нет, строка «Поблагодарить автора» никому не видна.</p>
+        <input id="thanksUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://pay.cloudtips.ru/p/…" value="${esc(data.thanks_url || "")}">
+        <button class="btn ghost adm-wide" id="thanksSave">Сохранить</button>
+      </div>
+      <div class="adm-card">
         <h3>Люди <small>${data.people.length}</small></h3>
         ${people}
       </div>
@@ -76,6 +82,7 @@ const Admin = (() => {
     $("#seatMinus").onclick = () => setSeats(data.seats - 1);
     $("#seatPlus").onclick = () => setSeats(data.seats + 1);
     $("#newInvite").onclick = newInvite;
+    $("#thanksSave").onclick = saveThanks;
     $("#admin").querySelectorAll("[data-share]").forEach(b => b.onclick = () => share(b.dataset.share, b));
     $("#admin").querySelectorAll("[data-act]").forEach(b => b.onclick = () => act(b.dataset.act, b.dataset.id, b.dataset.email));
   }
@@ -83,6 +90,12 @@ const Admin = (() => {
   async function setSeats(n){
     if(n < 0) return;
     try{ await call("admin_set_seats", {n}); data.seats = n; render(); }catch(e){ toast("Не получилось, попробуйте ещё раз"); }
+  }
+  async function saveThanks(){
+    const url = $("#thanksUrl").value.trim();
+    if(url && !/^https:\/\/\S+$/i.test(url)){ toast("Ссылка должна начинаться с https://"); return; }
+    try{ await call("admin_set_thanks", {url}); data.thanks_url = url || null; Sync.setThanks(data.thanks_url); toast(url ? "Сохранил, строка «Поблагодарить» появилась" : "Ссылка убрана"); }
+    catch(e){ toast("Не получилось сохранить. Проверьте ссылку"); }
   }
   async function newInvite(){
     if(!confirm("Сделать новую ссылку? Старая перестанет пускать новых людей.")) return;
