@@ -112,8 +112,8 @@ const Admin = (() => {
         <h3>Проверка</h3>
         <p class="adm-note">Показать анкету «Мой вкус», как её видят новые люди. Ваш вкус заменится, только если в конце нажать «Всё верно».</p>
         <button class="btn ghost adm-wide" id="onbAgain">Пройти анкету заново</button>
-      </div>
-      <p class="adm-note adm-soon">Скоро здесь появятся затраты на ИИ по каждому человеку, лимиты и выбор модели.</p>`;
+      </div>`;
+    foldCards();
     $("#seatMinus").onclick = () => setSeats(data.seats - 1);
     $("#seatPlus").onclick = () => setSeats(data.seats + 1);
     $("#newInvite").onclick = newInvite;
@@ -151,6 +151,39 @@ const Admin = (() => {
       <a class="adm-ext" href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">Открыть баланс в OpenAI</a>
       <p class="adm-note">Это примерный остаток: другие программы на том же ключе и сгорание кредитов он не видит. Иногда сверяйте с OpenAI.</p>
     </div>`;
+  }
+  // Каждый блок «Статистики» сворачивается; какие раскрыты — запоминаем на этом устройстве.
+  function foldCards(){
+    let open = [];
+    try{ open = JSON.parse(localStorage.getItem("kk-adm-open") || "[]"); }catch(e){}
+    const left = data.balance_left == null ? null : Number(data.balance_left);
+    const low = left !== null && left < Number(data.balance_warn ?? 1);
+    const links = [data.contact_url && "Telegram", data.sbp_phone && "СБП", data.thanks_url && "ссылка"].filter(Boolean);
+    const sum = {
+      "Баланс OpenAI": left === null ? "не задан" : `≈ ${usd(left)}`,
+      "ИИ": `${data.ai_model} · ${usd(data.month_total)}`,
+      "Места": `${data.used} из ${data.seats}`,
+      "Связь с автором": links.length ? links.join(", ") : "не задано",
+    };
+    $("#admin").querySelectorAll(".adm-card").forEach(card => {
+      const h = card.querySelector("h3"); if(!h) return;
+      const key = h.childNodes[0].textContent.trim();
+      const d = document.createElement("details");
+      d.className = card.className + " adm-fold";
+      if(open.includes(key) || (key === "Баланс OpenAI" && low)) d.open = true;
+      const sm = document.createElement("summary");
+      sm.appendChild(h);
+      sm.insertAdjacentHTML("beforeend", `<span class="adm-sum">${esc(sum[key] || "")}</span>${ARR}`);
+      const body = document.createElement("div"); body.className = "adm-body";
+      while(card.firstChild) body.appendChild(card.firstChild);
+      d.append(sm, body);
+      card.replaceWith(d);
+      d.addEventListener("toggle", () => {
+        let o = []; try{ o = JSON.parse(localStorage.getItem("kk-adm-open") || "[]"); }catch(e){}
+        o = o.filter(x => x !== key); if(d.open) o.push(key);
+        try{ localStorage.setItem("kk-adm-open", JSON.stringify(o)); }catch(e){}
+      });
+    });
   }
   async function saveBalance(){
     const raw = $("#balAmount").value.trim().replace(",", "."), warn = parseFloat($("#balWarn").value.replace(",", "."));

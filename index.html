@@ -216,6 +216,18 @@ body.onb-open #main{display:none}
 .adm-lims input{width:96px;margin:0;text-align:right;padding:9px 12px}
 .sbp-num{font-family:Unbounded,sans-serif;font-weight:500;font-size:24px;text-align:center;margin-top:16px;letter-spacing:.5px}
 .sbp-bank{text-align:center;color:var(--muted);font-size:14px;margin-top:6px}
+.adm-card.adm-fold{padding:0}
+.adm-fold>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:15px 16px;cursor:pointer;background:none!important;border:0!important;border-radius:0!important;margin:0!important}
+.adm-fold>summary::-webkit-details-marker{display:none}
+.adm-fold>summary h3{margin:0;flex-shrink:0}
+.adm-fold .adm-sum{flex:1;text-align:right;color:var(--muted);font-size:13px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adm-fold .arr{display:flex;color:var(--muted);transition:transform .2s}
+.adm-fold .arr .ic{width:18px;height:18px}
+.adm-fold .arr,details.fold[open] .adm-fold .arr{transform:none}
+details.fold[open] .adm-fold[open]>summary .arr,.adm-fold[open]>summary .arr{transform:rotate(180deg)}
+.adm-fold>.adm-body{padding:0 16px 16px}
+.adm-fold>.adm-body>:first-child{margin-top:0}
+.adm-low .adm-sum{color:var(--bad)}
 .adm-low{border-color:var(--bad)}
 .adm-alert{margin-top:10px;background:#3a1c1f;color:var(--bad);border-radius:10px;padding:9px 12px;font:600 14px Manrope,system-ui,sans-serif}
 .adm-ext{display:block;text-align:center;margin-top:10px;color:var(--later);font-size:14px;text-decoration:none}
