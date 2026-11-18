@@ -111,6 +111,7 @@ const Sync = (() => {
     saveSnap(fresh);
     try{ localStorage.setItem(LS_KEY, JSON.stringify({profile: state.profile, items: state.items, updated: Date.now()})); }catch(e){}
     renderAll(); if(typeof renderResults === "function") renderResults();
+    if(window.Taste) Taste.maybeStart();   // новый человек с пустым «Моим вкусом» — анкета
     if(!diff(fresh).empty) schedule(); else setStatus("ok");
   }
 

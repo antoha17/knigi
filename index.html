@@ -149,6 +149,29 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 .lg-err:empty{display:none}
 .lg-note{font-size:13px!important;margin-top:14px!important}
 .add-hint{color:var(--muted);font-size:13.5px;margin-top:6px;line-height:1.45}
+/* анкета «Мой вкус» */
+#onb{display:none}
+body.onb-open #onb{display:block}
+body.onb-open #main{display:none}
+.onb{margin-top:18px}
+.onb-head h3{font-family:Unbounded,sans-serif;font-weight:500;font-size:21px;line-height:1.2}
+.onb-head p{color:var(--muted);font-size:14px;margin-top:8px}
+.onb-q{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px}
+.onb-q h4{font:700 15px Manrope,system-ui,sans-serif}
+.onb-q h4 small{font-weight:500;color:var(--muted);font-size:12px;margin-left:6px}
+.onb-q .chips{margin-top:12px}
+.onb-q input{margin-top:12px}
+.onb-go{margin-top:16px}
+.onb-go .btn{width:100%}
+.onb-skip{display:block;margin:6px auto 0;background:none;border:0;color:var(--muted);font:500 14px Manrope,system-ui,sans-serif;padding:10px}
+.onb-result{background:var(--why-bg);border-left:3px solid var(--accent);border-radius:0 14px 14px 0;padding:14px 16px;font-size:15px;color:var(--why-text);line-height:1.5;margin-top:16px}
+#onbEdit{margin-top:16px;min-height:160px}
+/* инструменты «Моего вкуса» */
+.taste-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.taste-tools .btn{font-size:14px;padding:12px 8px;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
+.taste-tools .ic{width:17px;height:17px;color:var(--accent)}
+#tasteWordsBox{margin-top:8px}
+#tasteWordsBox textarea{min-height:90px}
 /* карточка «Нравятся подборки?» на вкладке «Подобрать» */
 .thanks-card{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:16px}
 .thanks-card>.ic{width:22px;height:22px;color:var(--accent);margin-top:2px}
@@ -221,6 +244,7 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
   <h1>Что <span>почитать</span></h1>
 
   <section id="gate"></section>
+  <section id="onb"></section>
 
   <div id="main">
   <div class="tabs">
@@ -292,6 +316,11 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
     <details class="sec fold" id="tasteBox">
       <summary><h2 id="tasteTitle">Мой вкус</h2></summary>
       <textarea id="profile" style="margin-top:10px" placeholder="Что любите, что не любите, что бросили и почему…"></textarea>
+      <div class="taste-tools" id="tasteTools"></div>
+      <div id="tasteWordsBox" class="hidden">
+        <textarea id="tasteWordsIn" placeholder="Своими словами: что нравится, что нет, что недавно зацепило. Можно надиктовать с клавиатуры."></textarea>
+        <button class="btn ghost adm-wide" id="tasteWordsGo">Добавить к вкусу</button>
+      </div>
       <button class="btn ghost" id="saveProfile" style="margin-top:8px;width:100%">Сохранить</button>
     </details>
 
@@ -315,5 +344,6 @@ body.auth-pending #main,body.auth-pending #gate{visibility:hidden}
 <script src="app.js"></script>
 <script src="sync.js"></script>
 <script src="admin.js"></script>
+<script src="taste.js"></script>
 </body>
 </html>
