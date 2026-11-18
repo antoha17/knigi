@@ -42,6 +42,7 @@ const P = {
   chev:'<path d="M6 9l6 6 6-6"/>',
   share:'<path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/>',
   squarePlus:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/>',
+  pagemenu:'<rect x="3" y="4" width="7" height="5.5" rx="1.3" fill="currentColor" stroke="none"/><path d="M4 13h12M4 16.5h16M4 20h11"/>',
   dots:'<circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/>',
   vdots:'<circle cx="12" cy="5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="19" r="1.3" fill="currentColor"/>',
   install:'<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5M8 21h8"/>'
@@ -463,7 +464,7 @@ const Install = (() => {
   const steps = {
     ios: [
       `Откройте эту страницу в <b>Safari</b> (в других браузерах на iPhone пункта может не быть).`,
-      `Нажмите «Поделиться» ${IC("share")} внизу экрана. В новых iOS она спрятана в меню ${IC("dots")} справа внизу.`,
+      `Нажмите «Поделиться» ${IC("share")} внизу экрана. В новых iOS сначала нажмите значок ${IC("pagemenu")} слева в адресной строке, а там «Поделиться».`,
       `Пролистайте и выберите «На экран „Домой“» ${IC("squarePlus")}.`,
       `Нажмите «Добавить». Иконка появится рядом с остальными приложениями.`
     ],
