@@ -103,6 +103,11 @@ const Admin = (() => {
         <h3>Люди <small>${data.people.length}</small></h3>
         ${people}
       </div>
+      <div class="adm-card">
+        <h3>Проверка</h3>
+        <p class="adm-note">Показать анкету «Мой вкус», как её видят новые люди. Ваш вкус заменится, только если в конце нажать «Всё верно».</p>
+        <button class="btn ghost adm-wide" id="onbAgain">Пройти анкету заново</button>
+      </div>
       <p class="adm-note adm-soon">Скоро здесь появятся затраты на ИИ по каждому человеку, лимиты и выбор модели.</p>`;
     $("#seatMinus").onclick = () => setSeats(data.seats - 1);
     $("#seatPlus").onclick = () => setSeats(data.seats + 1);
@@ -111,6 +116,7 @@ const Admin = (() => {
     $("#aiModel").onclick = e => { const c = e.target.closest("[data-m]"); if(!c) return; $("#aiModel").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c)); };
     $("#aiSave").onclick = saveAi;
     $("#balSave").onclick = saveBalance;
+    $("#onbAgain").onclick = () => { if(window.Taste) Taste.showQuestions(); };
     $("#aiTest").onclick = testModel;
     $("#admin").querySelectorAll("[data-share]").forEach(b => b.onclick = () => share(b.dataset.share, b));
     $("#admin").querySelectorAll("[data-act]").forEach(b => b.onclick = () => act(b.dataset.act, b.dataset.id, b.dataset.email));
