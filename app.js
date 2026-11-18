@@ -142,10 +142,10 @@ function aiError(e){
   const c = e && e.code;
   return c==="no_server" ? "Подбор заработает, когда подключим сервер. Список уже можно вести."
        : c==="login" ? "Войдите, чтобы пользоваться подбором"
-       : c==="not_allowed" ? "Подбор доступен только по приглашению — напишите владельцу приложения"
-       : c==="limit" ? "На сегодня подборы закончились — лимит обновится завтра"
-       : c==="network" ? "Нет связи с сервером — проверьте интернет"
-       : c==="empty" ? "Новых вариантов не нашлось — попробуйте другое настроение или «Похоже на…»"
+       : c==="not_allowed" ? "Подбор доступен только по приглашению. Напишите владельцу приложения"
+       : c==="limit" ? "На сегодня подборы закончились. Лимит обновится завтра"
+       : c==="network" ? "Нет связи с сервером. Проверьте интернет"
+       : c==="empty" ? "Новых вариантов не нашлось. Попробуйте другое настроение или «Похоже на…»"
        : "Не получилось. Попробуйте ещё раз";
 }
 
@@ -272,8 +272,8 @@ function card(x, i, src){
 
 function renderResults(){
   if(!current.length){ $("#results").innerHTML=""; return; }
-  $("#results").innerHTML = current.map((x,i)=>card(x,i,"r")).join("") + (picking ? `<div class="status"><span class="dots">Подбираю ещё</span></div>` : `<div class="btns"><button class="btn ghost" style="flex:1" id="more">Не то — ещё варианты</button></div>
-  <div class="note">Уже читали — отметьте «Читал», «Зашло» или «Не моё». Чем больше отметок, тем точнее подборка.</div>`);
+  $("#results").innerHTML = current.map((x,i)=>card(x,i,"r")).join("") + (picking ? `<div class="status"><span class="dots">Подбираю ещё</span></div>` : `<div class="btns"><button class="btn ghost" style="flex:1" id="more">Не то, ещё варианты</button></div>
+  <div class="note">Уже читали? Отметьте «Читал», «Зашло» или «Не моё». Чем больше отметок, тем точнее подборка.</div>`);
   const mb=$("#more"); if(mb) mb.onclick=()=>pick(current.length===1);
 }
 
@@ -291,7 +291,7 @@ $("#results").addEventListener("click",onAct);
 $("#news").addEventListener("click",onAct);
 
 /* ---------- мой список ---------- */
-const EMPTY = {"watching": "Отметьте книгу «Читаю» — здесь будет прогресс в процентах", "liked": "Здесь будут книги, которые понравились", "disliked": "Здесь будет то, что не понравилось, — такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
+const EMPTY = {"watching": "Отметьте книгу «Читаю», и здесь будет прогресс в процентах", "liked": "Здесь будут книги, которые понравились", "disliked": "Здесь будет то, что не понравилось. Такое больше не предложу", "seen": "Здесь будут прочитанные книги"};
 
 function renderList(){
   const later = state.items.filter(i=>i.verdict==="later").length;
@@ -320,7 +320,7 @@ function renderList(){
       body = arr.length ? arr.map(i=>`<div class="row stack"><div class="top"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
         <div>${sub(i)}${i.hook?" · "+esc(i.hook):""}</div></div>
         <div class="mini"><button ${t(i)} data-k="watching" title="Начал читать" aria-label="Начал читать">${IC("book")}</button><button ${t(i)} data-k="liked" title="Прочитал, понравилось" aria-label="Понравилось">${IC("up")}</button><button ${t(i)} data-k="disliked" title="Не моё" aria-label="Не моё">${IC("down")}</button>${del(i)}</div></div>${links(i,true)}</div>`).join("")
-        : `<div class="empty">Пока пусто — добавляйте из подборок или то, что посоветовали</div>`;
+        : `<div class="empty">Пока пусто. Добавляйте из подборок или то, что посоветовали</div>`;
     } else {
       body = arr.map(i=>`<div class="row"><div class="t"><b>${esc(i.title)}</b>${yr(i)}
         <div>${sub(i)}</div></div>
@@ -401,11 +401,11 @@ const Install = (() => {
       `Откройте страницу в <b>Chrome</b>.`,
       `Нажмите меню ${IC("vdots")} в правом верхнем углу.`,
       `Выберите «Установить приложение» или «Добавить на главный экран».`,
-      `Подтвердите — иконка появится на рабочем столе.`
+      `Подтвердите, и иконка появится на рабочем столе.`
     ],
     desktop: [
       `Откройте страницу в <b>Chrome</b>, <b>Яндекс Браузере</b> или <b>Edge</b>.`,
-      `Нажмите значок установки ${IC("install")} справа в адресной строке — или меню браузера → «Установить приложение».`,
+      `Нажмите значок установки ${IC("install")} справа в адресной строке или откройте меню браузера → «Установить приложение».`,
       `В Safari на Mac: меню «Файл» → «Добавить в Dock».`
     ]
   };
@@ -414,7 +414,7 @@ const Install = (() => {
     const native = deferred && currentTab!=="ios";
     $("#sheet").innerHTML = `<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
       <h3 id="shTitle">Поставьте приложение на экран</h3>
-      <p>Так оно будет открываться одним нажатием, как обычное приложение, — без браузера и адресной строки.</p>
+      <p>Так оно будет открываться одним нажатием, как обычное приложение: без браузера и адресной строки.</p>
       <div class="seg chips">${[["ios","iPhone"],["android","Android"],["desktop","Компьютер"]].map(([k,n])=>`<button class="chip ${k===currentTab?"on":""}" data-os="${k}">${n}</button>`).join("")}</div>
       ${native?`<div class="btns"><button class="btn main" id="shInstall">Установить</button></div><p>Или вручную:</p>`:""}
       <ol>${steps[currentTab].map(s=>`<li><span>${s}</span></li>`).join("")}</ol>
