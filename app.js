@@ -274,12 +274,20 @@ const SITES = {
   lit: {n:"Литрес",        bg:"#ff4c00", fg:"#fff", g:"Л",  u:q=>"https://www.litres.ru/search/?q="+q},
   cg:  {n:"Читай-город",   bg:"#ff6a00", fg:"#fff", g:"ЧГ", u:q=>"https://www.chitai-gorod.ru/search?phrase="+q},
   oz:  {n:"Ozon",          bg:"#005bff", fg:"#fff", g:"O",  u:q=>"https://www.ozon.ru/search/?text="+q},
-  ym:  {n:"Яндекс Маркет", bg:"#ffcc00", fg:"#1a1a1a", g:"М", u:q=>"https://market.yandex.ru/search?text="+q}
+  ym:  {n:"Яндекс Маркет", bg:"#ffcc00", fg:"#1a1a1a", g:"М", u:q=>"https://market.yandex.ru/search?text="+q},
+  ll:  {n:"LiveLib",       bg:"#7ab648", fg:"#fff", g:"LL", u:q=>"https://www.livelib.ru/find/books/"+q}
 };
 const site = (k, q) => { const x = SITES[k]; return `<a class="site" href="${x.u(q)}" target="_blank" rel="noopener" title="${x.n}" aria-label="${x.n}" style="background:${x.bg};color:${x.fg}">${x.g}</a>`; };
 function links(x, small){
   const q = encodeURIComponent(`${x.title} ${x.author||""}`.replace(/\s+/g," ").trim());
-  return `<div class="links${small?" sm":""}"><span class="lk">Купить</span>${["lit","cg","oz","ym"].map(k=>site(k,q)).join("")}</div>`;
+  // Кнопки одной ширины, сеткой по две: значок + название
+  const btn = k => { const x = SITES[k]; return `<a class="shop" href="${x.u(q)}" target="_blank" rel="noopener"><i style="background:${x.bg};color:${x.fg}">${x.g}</i>${x.n}</a>`; };
+  return `<div class="shops${small?" sm":""}">
+    <div class="lk">Купить</div>
+    <div class="shop-grid">${["lit","cg","oz","ym"].map(btn).join("")}</div>
+    <div class="lk">Отзывы читателей</div>
+    <div class="shop-grid one">${btn("ll")}</div>
+  </div>`;
 }
 
 function card(x, i, src){
