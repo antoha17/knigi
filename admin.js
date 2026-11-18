@@ -59,6 +59,7 @@ const Admin = (() => {
       </div>`).join("");
     const canShare = !!navigator.share;
     $("#admin").innerHTML = `
+      ${balanceCard()}
       <div class="adm-card">
         <h3>ИИ</h3>
         <div class="adm-spend"><b>${usd(data.month_total)}</b><span>потрачено в этом месяце из ${usd(data.global_monthly_usd)}</span></div>
@@ -109,6 +110,7 @@ const Admin = (() => {
     $("#thanksSave").onclick = saveThanks;
     $("#aiModel").onclick = e => { const c = e.target.closest("[data-m]"); if(!c) return; $("#aiModel").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c)); };
     $("#aiSave").onclick = saveAi;
+    $("#balSave").onclick = saveBalance;
     $("#aiTest").onclick = testModel;
     $("#admin").querySelectorAll("[data-share]").forEach(b => b.onclick = () => share(b.dataset.share, b));
     $("#admin").querySelectorAll("[data-act]").forEach(b => b.onclick = () => act(b.dataset.act, b.dataset.id, b.dataset.email));
@@ -117,6 +119,34 @@ const Admin = (() => {
   async function setSeats(n){
     if(n < 0) return;
     try{ await call("admin_set_seats", {n}); data.seats = n; render(); }catch(e){ toast("Не получилось, попробуйте ещё раз"); }
+  }
+  // Примерный баланс OpenAI: сумма, вписанная после пополнения, минус траты после этого.
+  function balanceCard(){
+    const left = data.balance_left == null ? null : Number(data.balance_left);
+    const warn = Number(data.balance_warn ?? 1);
+    const low = left !== null && left < warn;
+    const since = data.balance_set_at ? new Date(data.balance_set_at).toLocaleDateString("ru-RU", {day: "numeric", month: "long"}) : "";
+    return `<div class="adm-card ${low ? "adm-low" : ""}">
+      <h3>Баланс OpenAI</h3>
+      ${left === null
+        ? `<p class="adm-note">Впишите сумму с platform.openai.com → Billing, и здесь будет видно, сколько примерно осталось.</p>`
+        : `<div class="adm-spend"><b>≈ ${usd(left)}</b><span>было ${usd(data.balance_usd)} на ${since}, минус траты приложений</span></div>
+           ${low ? `<div class="adm-alert">Пора пополнить баланс OpenAI</div>` : ""}`}
+      <div class="adm-lims" style="margin-top:12px">
+        <label>Баланс сейчас, $<input id="balAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="2.90"></label>
+        <label>Предупредить, когда меньше, $<input id="balWarn" type="number" inputmode="decimal" min="0" step="0.5" value="${warn}"></label>
+      </div>
+      <button class="btn ghost adm-wide" id="balSave">Сохранить</button>
+      <a class="adm-ext" href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">Открыть баланс в OpenAI</a>
+      <p class="adm-note">Это примерный остаток: другие программы на том же ключе и сгорание кредитов он не видит. Иногда сверяйте с OpenAI.</p>
+    </div>`;
+  }
+  async function saveBalance(){
+    const raw = $("#balAmount").value.trim().replace(",", "."), warn = parseFloat($("#balWarn").value.replace(",", "."));
+    const amount = raw === "" ? (data.balance_usd == null ? null : Number(data.balance_usd)) : parseFloat(raw);
+    if((amount !== null && !(amount >= 0)) || !(warn >= 0)){ toast("Проверьте цифры"); return; }
+    try{ await call("admin_set_balance", {amount, warn}); toast("Сохранил"); await load(); }
+    catch(e){ toast("Не получилось сохранить"); }
   }
   const chosenModel = () => { const c = $("#aiModel .chip.on"); return c ? c.dataset.m : data.ai_model; };
   async function saveAi(){
