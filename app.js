@@ -603,6 +603,29 @@ const TASTE_CFG = {
 let lastTouchEnd = 0;
 document.addEventListener("touchend", e => { const n = Date.now(); if(n - lastTouchEnd < 300 && !e.target.closest("button,a,input,textarea,select,summary,label")) e.preventDefault(); lastTouchEnd = n; }, {passive:false});
 
+/* Раскрыли раздел — он плавно поднимается к верху экрана, чтобы было видно больше записей.
+   Свернули — экран возвращается туда, где был. Срабатывает только от нажатия на заголовок. */
+(function foldScroll(){
+  let tapped = null;
+  document.addEventListener("click", e => { const s = e.target.closest("details > summary"); tapped = s ? s.parentElement : null; }, true);
+  document.addEventListener("toggle", e => {
+    const d = e.target;
+    if(!(d instanceof HTMLDetailsElement) || d !== tapped) return;
+    tapped = null;
+    if(d.open){
+      d.dataset.backY = String(window.scrollY);
+      requestAnimationFrame(() => {
+        const top = d.getBoundingClientRect().top + window.scrollY - 10;
+        // поднимаем, только если раскрытое не помещается на экране
+        if(d.getBoundingClientRect().bottom > window.innerHeight) window.scrollTo({top, behavior: "smooth"});
+      });
+    } else if(d.dataset.backY){
+      const y = +d.dataset.backY; delete d.dataset.backY;
+      if(window.scrollY > y) window.scrollTo({top: y, behavior: "smooth"});
+    }
+  }, true);
+})();
+
 /* ---------- запуск ---------- */
 function renderAll(){ $("#profile").value = state.profile; renderList(); renderNews(); }
 $("#surprise").innerHTML = IC("dice") + "<span>Удиви</span>";
