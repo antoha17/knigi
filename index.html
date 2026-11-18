@@ -170,8 +170,9 @@ body.onb-open #main{display:none}
 .taste-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .taste-tools .btn{font-size:14px;padding:12px 8px;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
 .taste-tools .ic{width:17px;height:17px;color:var(--accent)}
-#tasteWordsBox{margin-top:8px}
-#tasteWordsBox textarea{min-height:90px}
+/* окно, прижатое к верху экрана (для ввода текста: клавиатура его не закрывает) */
+.sheet-bg.top{align-items:flex-start}
+.sheet-bg.top .sheet{border-radius:0 0 22px 22px;border-bottom:1px solid var(--line);border-top:0;padding-top:calc(20px + env(safe-area-inset-top));max-height:100vh}
 /* карточка «Нравятся подборки?» на вкладке «Подобрать» */
 .thanks-card{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:16px}
 .thanks-card>.ic{width:22px;height:22px;color:var(--accent);margin-top:2px}
@@ -317,10 +318,6 @@ body.onb-open #main{display:none}
       <summary><h2 id="tasteTitle">Мой вкус</h2></summary>
       <textarea id="profile" style="margin-top:10px" placeholder="Что любите, что не любите, что бросили и почему…"></textarea>
       <div class="taste-tools" id="tasteTools"></div>
-      <div id="tasteWordsBox" class="hidden">
-        <textarea id="tasteWordsIn" placeholder="Своими словами: что нравится, что нет, что недавно зацепило. Можно надиктовать с клавиатуры."></textarea>
-        <button class="btn ghost adm-wide" id="tasteWordsGo">Добавить к вкусу</button>
-      </div>
       <button class="btn ghost" id="saveProfile" style="margin-top:8px;width:100%">Сохранить</button>
     </details>
 

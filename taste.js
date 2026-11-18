@@ -119,18 +119,30 @@ const Taste = (() => {
       toast("Готово. Проверьте и нажмите «Сохранить»");
     });
   }
-  function toggleWords(){
-    const box = $("#tasteWordsBox"); box.classList.toggle("hidden");
-    if(!box.classList.contains("hidden")) $("#tasteWordsIn").focus();
+  // «Своими словами» — отдельное окно сверху экрана (клавиатура его не закрывает).
+  function openWords(){
+    $("#sheet").innerHTML = `<div class="sheet-bg top"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="twTitle">
+      <h3 id="twTitle">Расскажите своими словами</h3>
+      <p>Что нравится, что нет, что недавно зацепило. Можно надиктовать с клавиатуры. ИИ аккуратно добавит это к вашему вкусу.</p>
+      <textarea id="tasteWordsIn" style="margin-top:12px;min-height:110px" placeholder="Например: люблю, когда сериал затягивает с первой серии, не люблю долгие драмы"></textarea>
+      <div class="btns"><button class="btn main" id="tasteWordsGo">Добавить к вкусу</button></div>
+      <div class="btns" style="margin-top:8px"><button class="btn ghost" style="flex:1" id="twClose">Отмена</button></div>
+    </div></div>`;
+    const close = () => { $("#sheet").innerHTML = ""; };
+    $(".sheet-bg").onclick = e => { if(e.target.classList.contains("sheet-bg")) close(); };
+    $("#twClose").onclick = close;
+    $("#tasteWordsGo").onclick = () => mergeWords(close);
+    setTimeout(() => $("#tasteWordsIn").focus({preventScroll: true}), 60);
   }
-  function mergeWords(){
+  function mergeWords(done){
     const said = $("#tasteWordsIn").value.trim();
     if(!said){ toast("Напишите или надиктуйте пару фраз"); return; }
     busyRun($("#tasteWordsGo"), "Добавляю…", async () => {
       const cur = $("#profile").value.trim();
       const r = await AI.ask(`Текущее описание вкуса человека (${C.subject}): «${cur || "пока пусто"}».\nОн добавил своими словами (возможно, надиктовано, с ошибками распознавания речи): «${said}».\n\nОбъедини в одно аккуратное описание вкуса: сохрани старое, добавь новое, исправь ошибки, убери повторы. 3–6 предложений. ${RULES}`, {kind: "taste"});
       const t = clean(r.text); if(!t) throw {code: "server"};
-      $("#profile").value = t; $("#tasteWordsIn").value = ""; $("#tasteWordsBox").classList.add("hidden");
+      $("#profile").value = t;
+      done();
       toast("Готово. Проверьте и нажмите «Сохранить»");
     });
   }
@@ -139,8 +151,7 @@ const Taste = (() => {
     const tools = $("#tasteTools"); if(!tools) return;
     tools.innerHTML = `<button class="btn ghost" id="tasteMarks">${IC("spark")}По моим отметкам</button><button class="btn ghost" id="tasteWords">${IC("chat")}Своими словами</button>`;
     $("#tasteMarks").onclick = fromMarks;
-    $("#tasteWords").onclick = toggleWords;
-    $("#tasteWordsGo").onclick = mergeWords;
+    $("#tasteWords").onclick = openWords;
   }
   init();
   return {maybeStart, showQuestions};
