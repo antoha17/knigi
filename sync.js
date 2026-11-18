@@ -1,4 +1,4 @@
-/* Вход по почте (код из письма) и синхронизация списка с Supabase.
+/* Вход по почте и паролю и синхронизация списка с Supabase.
    Файл одинаковый в обоих приложениях (kino и knigi). Ожидает из app.js:
    APP, LS_KEY, state, norm, esc, IC, toast, renderAll, renderResults, $.
 
@@ -106,71 +106,87 @@ const Sync = (() => {
     if(!diff(fresh).empty) schedule(); else setStatus("ok");
   }
 
-  /* ---------- вход ---------- */
+  /* ---------- вход по почте и паролю ---------- */
   function errText(e){
     const m = String((e && (e.code || e.message)) || "").toLowerCase();
-    if(m.includes("rate") || (e && e.status===429)) return "Слишком много писем подряд. Подождите немного и попробуйте снова";
-    if(m.includes("otp") || m.includes("token") || m.includes("expired") || m.includes("invalid")) return "Код не подошёл или устарел. Запросите новый";
+    if(m.includes("invalid_credentials") || m.includes("invalid login")) return "Неверная почта или пароль";
+    if(m.includes("already") || m.includes("user_exists")) return "Такая почта уже зарегистрирована. Нажмите «Войти»";
+    if(m.includes("weak") || m.includes("password should") || m.includes("at least")) return "Пароль слишком простой: нужно не меньше 6 символов";
+    if(m.includes("not_confirmed") || m.includes("not confirmed")) return "Почта не подтверждена. Напишите владельцу приложения";
+    if(m.includes("rate") || (e && e.status===429)) return "Слишком много попыток. Подождите немного и попробуйте снова";
+    if(m.includes("same_password") || m.includes("different from the old")) return "Новый пароль должен отличаться от старого";
     if(m.includes("email")) return "Проверьте адрес почты";
     if(!navigator.onLine || m.includes("fetch")) return "Нет связи. Проверьте интернет";
     return "Не получилось. Попробуйте ещё раз";
   }
 
-  function showLogin(step, email){
-    step = step || "email";
+  const TITLES = {login:"Вход", signup:"Регистрация", reset:"Восстановить пароль", newpass:"Новый пароль"};
+  function showLogin(mode, email){
+    mode = mode || "login";
     const box = $("#sheet");
+    const emailInp = `<input id="lgEmail" type="email" inputmode="email" autocomplete="username" placeholder="Почта" style="margin-top:14px" value="${esc(email||"")}">`;
+    const passInp = (ac, ph) => `<input id="lgPass" type="password" autocomplete="${ac}" placeholder="${ph}" style="margin-top:8px">`;
+    const body = {
+      login: `<p>Список будет храниться на сервере и будет одинаковым на телефоне и компьютере.</p>${emailInp}${passInp("current-password","Пароль")}
+        <div class="btns"><button class="btn main" id="lgGo">Войти</button></div>
+        <div class="lg-links"><button id="lgToSignup">Создать аккаунт</button><button id="lgToReset">Забыли пароль?</button></div>`,
+      signup: `<p>Придумайте пароль: не меньше 6 символов. Приложение запомнит вход, вводить его каждый раз не придётся.</p>${emailInp}${passInp("new-password","Новый пароль")}
+        <div class="btns"><button class="btn main" id="lgGo">Создать аккаунт</button></div>
+        <div class="lg-links"><button id="lgToLogin">У меня уже есть аккаунт</button></div>`,
+      reset: `<p>Пришлём письмо со ссылкой. Откройте её, задайте новый пароль, потом войдите с ним в приложении.</p>${emailInp}
+        <div class="btns"><button class="btn main" id="lgGo">Прислать письмо</button></div>
+        <div class="lg-links"><button id="lgToLogin">Назад ко входу</button></div>`,
+      newpass: `<p>Придумайте новый пароль: не меньше 6 символов.</p>${passInp("new-password","Новый пароль")}
+        <div class="btns"><button class="btn main" id="lgGo">Сохранить пароль</button></div>`
+    }[mode];
     box.innerHTML = `<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="lgTitle">
-      <h3 id="lgTitle">${step==="email" ? "Вход" : "Введите код из письма"}</h3>
-      ${step==="email"
-        ? `<p>Список будет храниться на сервере и будет одинаковым на телефоне и компьютере. Пароль не нужен: пришлём код на почту.</p>
-           <input id="lgEmail" type="email" inputmode="email" autocomplete="email" placeholder="Ваша почта" style="margin-top:14px" value="${esc(email||"")}">
-           <div class="btns"><button class="btn main" id="lgGo">Получить код</button></div>`
-        : `<p>Отправили письмо на <b>${esc(email)}</b>. Если его нет, загляните в «Спам».</p>
-           <input id="lgCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Код из письма" style="margin-top:14px;letter-spacing:4px;font-size:20px;text-align:center">
-           <div class="btns"><button class="btn main" id="lgGo">Войти</button></div>
-           <div class="btns" style="margin-top:8px"><button class="btn ghost" style="flex:1;font-size:14px" id="lgBack">Другая почта</button><button class="btn ghost" style="flex:1;font-size:14px" id="lgResend">Отправить ещё раз</button></div>`}
-      <p class="lg-err" id="lgErr" style="color:var(--bad)"></p>
-      <div class="btns" style="margin-top:6px"><button class="btn ghost" style="flex:1" id="lgClose">Отмена</button></div>
+      <h3 id="lgTitle">${TITLES[mode]}</h3>${body}
+      <p id="lgErr" style="color:var(--bad)"></p>
+      <div class="btns" style="margin-top:6px"><button class="btn ghost" style="flex:1" id="lgClose">${mode==="newpass"?"Позже":"Отмена"}</button></div>
     </div></div>`;
     const close = () => { box.innerHTML = ""; };
     $(".sheet-bg").onclick = e => { if(e.target.classList.contains("sheet-bg")) close(); };
     $("#lgClose").onclick = close;
+    const curEmail = () => ($("#lgEmail") ? $("#lgEmail").value.trim().toLowerCase() : email);
+    [["#lgToSignup","signup"],["#lgToLogin","login"],["#lgToReset","reset"]].forEach(([id, m]) => { const b=$(id); if(b) b.onclick = () => showLogin(m, curEmail()); });
     const err = t => { $("#lgErr").textContent = t || ""; };
-    const go = $("#lgGo");
-    const busy = (b, t) => { go.disabled = b; go.textContent = t; };
+    const go = $("#lgGo"), label = go.textContent;
+    const busy = b => { go.disabled = b; go.textContent = b ? "Минутку…" : label; };
+    const first = $("#lgEmail") && !email ? $("#lgEmail") : ($("#lgPass") || $("#lgEmail"));
+    setTimeout(() => first && first.focus(), 50);
 
-    async function sendCode(addr){
-      const {error} = await sb.auth.signInWithOtp({email: addr, options: {shouldCreateUser: true}});
-      if(error) throw error;
-    }
-    if(step === "email"){
-      const inp = $("#lgEmail"); setTimeout(() => inp.focus(), 50);
-      const submit = async () => {
-        const addr = inp.value.trim().toLowerCase();
-        if(!/^\S+@\S+\.\S+$/.test(addr)){ err("Проверьте адрес почты"); return; }
-        busy(true, "Отправляю…"); err("");
-        try{ await sendCode(addr); showLogin("code", addr); }
-        catch(e){ busy(false, "Получить код"); err(errText(e)); }
-      };
-      go.onclick = submit; inp.onkeydown = e => { if(e.key==="Enter") submit(); };
-    } else {
-      const inp = $("#lgCode"); setTimeout(() => inp.focus(), 50);
-      const submit = async () => {
-        const code = inp.value.replace(/\D/g, "");
-        if(code.length < 6){ err("Введите код из письма полностью"); return; }
-        busy(true, "Проверяю…"); err("");
-        try{
-          const {error} = await sb.auth.verifyOtp({email, token: code, type: "email"});
+    const submit = async () => {
+      const addr = curEmail(), pass = $("#lgPass") ? $("#lgPass").value : "";
+      if(mode !== "newpass" && !/^\S+@\S+\.\S+$/.test(addr||"")){ err("Проверьте адрес почты"); return; }
+      if((mode === "signup" || mode === "newpass") && pass.length < 6){ err("Пароль должен быть не короче 6 символов"); return; }
+      if(mode === "login" && !pass){ err("Введите пароль"); return; }
+      busy(true); err("");
+      try{
+        if(mode === "login"){
+          const {error} = await sb.auth.signInWithPassword({email: addr, password: pass});
           if(error) throw error;
           close(); toast("Готово, вы вошли");
-        }catch(e){ busy(false, "Войти"); err(errText(e)); }
-      };
-      go.onclick = submit; inp.onkeydown = e => { if(e.key==="Enter") submit(); };
-      $("#lgBack").onclick = () => showLogin("email", email);
-      $("#lgResend").onclick = async () => {
-        err(""); try{ await sendCode(email); toast("Отправили новый код"); }catch(e){ err(errText(e)); }
-      };
-    }
+        } else if(mode === "signup"){
+          const {data, error} = await sb.auth.signUp({email: addr, password: pass});
+          if(error) throw error;
+          if(data && data.user && Array.isArray(data.user.identities) && !data.user.identities.length) throw {code:"user_exists"};
+          if(!data.session){ busy(false); err("Аккаунт создан, но вход пока не разрешён. Напишите владельцу приложения"); return; }
+          close(); toast("Аккаунт создан, вы вошли");
+        } else if(mode === "reset"){
+          const redirectTo = location.origin + location.pathname;
+          const {error} = await sb.auth.resetPasswordForEmail(addr, {redirectTo});
+          if(error) throw error;
+          busy(false); err(""); go.textContent = "Письмо отправлено"; go.disabled = true;
+          $(".sheet p").textContent = "Письмо отправлено на " + addr + ". Откройте ссылку из него (если письма нет, загляните в «Спам»).";
+        } else if(mode === "newpass"){
+          const {error} = await sb.auth.updateUser({password: pass});
+          if(error) throw error;
+          close(); toast("Пароль сохранён");
+        }
+      }catch(e){ busy(false); err(errText(e)); }
+    };
+    go.onclick = submit;
+    box.querySelectorAll("input").forEach(i => i.onkeydown = e => { if(e.key==="Enter") submit(); });
   }
 
   async function logout(){
@@ -184,7 +200,7 @@ const Sync = (() => {
     const box = $("#account"); if(!box) return;
     if(!ready()){ box.innerHTML = ""; return; }
     if(!user()){
-      box.innerHTML = `<div class="acc-card"><div>Войдите, чтобы список не потерялся и был одинаковым на телефоне и компьютере.</div><button class="btn main" id="accLogin">Войти по почте</button></div>`;
+      box.innerHTML = `<div class="acc-card"><div>Войдите, чтобы список не потерялся и был одинаковым на телефоне и компьютере.</div><button class="btn main" id="accLogin">Войти</button></div>`;
       $("#accLogin").onclick = () => showLogin();
     } else {
       const st = {saving:"Сохраняю…", offline:"Нет сети, сохраню позже", error:"Не удалось сохранить, повторю позже", ok:"Всё сохранено"}[status] || "";
@@ -197,11 +213,16 @@ const Sync = (() => {
   function init(){
     if(!ready()){ renderAccount(); return; }
     sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {
-      auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: "kk-auth"}
+      auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "kk-auth"}
     });
     sb.auth.onAuthStateChange((event, s) => {
       const was = user() && user().id;
       session = s;
+      if(event === "PASSWORD_RECOVERY"){
+        // открыли ссылку «восстановить пароль» из письма
+        try{ history.replaceState(null, "", location.pathname); }catch(e){}
+        setTimeout(() => showLogin("newpass"), 0);
+      }
       if(event === "SIGNED_OUT"){
         try{ localStorage.removeItem(SNAP); }catch(e){}
         state.items = []; state.profile = "";
