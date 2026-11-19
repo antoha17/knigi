@@ -539,8 +539,19 @@ const Install = (() => {
   function close(){ $("#sheet").innerHTML = ""; try{ localStorage.setItem(SEEN,"1"); }catch(e){} }
   function maybeAuto(){
     if(standalone()) { $("#howInstall").classList.add("hidden"); return; }
+    // Полоска вверху «Подобрать», пока приложение открыто в браузере на телефоне.
+    if(isIOS || isAndroid){
+      $("#pick").insertAdjacentHTML("afterbegin", `<button class="install-bar" id="installBar">${IC("squarePlus")}<span>Поставьте приложение на экран телефона</span><b>Как</b></button>`);
+      $("#installBar").onclick = () => show();
+    }
     let seen = false; try{ seen = !!localStorage.getItem(SEEN); }catch(e){}
-    if(!seen) setTimeout(()=>show(), 1200);
+    if(seen) return;
+    // Окно с инструкцией — один раз, когда человек уже вошёл и прошёл анкету (не поверх входа).
+    const t = setInterval(() => {
+      const b = document.body.classList;
+      if(b.contains("gated") || b.contains("onb-open") || $(".sheet")) return;
+      clearInterval(t); show();
+    }, 1500);
   }
   return {show, maybeAuto};
 })();

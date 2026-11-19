@@ -294,12 +294,14 @@ const Admin = (() => {
   }
   async function share(app, btn){
     const url = link(app), name = APPS.find(a => a[0] === app)[1];
+    // Текст и ссылка одной строкой: если передать ссылку отдельно, Telegram отправляет только её, без текста.
+    const msg = `Приложение «${name}»: создай аккаунт по этой ссылке ${url}`;
     if(navigator.share){
-      try{ await navigator.share({title: name, text: `Приложение «${name}»: создай аккаунт по этой ссылке`, url}); }catch(e){}
+      try{ await navigator.share({text: msg}); }catch(e){}
       return;
     }
-    try{ await navigator.clipboard.writeText(url); }
-    catch(e){ const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); }catch(_){} t.remove(); }
+    try{ await navigator.clipboard.writeText(msg); }
+    catch(e){ const t = document.createElement("textarea"); t.value = msg; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); }catch(_){} t.remove(); }
     btn.textContent = "Скопировано"; setTimeout(() => { btn.textContent = "Скопировать"; }, 1500);
   }
   async function act(kind, id, email){
