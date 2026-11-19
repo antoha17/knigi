@@ -407,6 +407,15 @@ function renderList(){
   }).join("") || `<div class="empty" style="margin-top:12px">По запросу «${esc($("#listQ").value.trim())}» ничего не нашлось</div>`;
 }
 $("#listQ").addEventListener("input", () => renderList());
+// Поиск по списку: поле поднимается к верху экрана, чтобы найденное было видно над клавиатурой.
+(() => {
+  const q = $("#listQ"), box = q.closest(".list-search");
+  const up = () => box.scrollIntoView({block: "start"});
+  q.addEventListener("focus", () => { document.body.classList.add("searching"); up(); setTimeout(up, 350); });
+  q.addEventListener("input", up);
+  q.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); q.blur(); } });   // «Найти» убирает клавиатуру
+  q.addEventListener("blur", () => { if(!q.value.trim()) document.body.classList.remove("searching"); });
+})();
 $("#lists").addEventListener("toggle",e=>{
   const d=e.target; if(!d.dataset||!d.dataset.g) return;
   d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g);
