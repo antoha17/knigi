@@ -246,9 +246,6 @@ body.onb-open #main{display:none}
 .onb-result{background:var(--why-bg);border-left:3px solid var(--accent);border-radius:0 14px 14px 0;padding:14px 16px;font-size:15px;color:var(--why-text);line-height:1.5;margin-top:16px}
 #onbEdit{margin-top:16px;min-height:160px}
 /* инструменты «Моего вкуса» */
-.taste-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-.taste-tools .btn{font-size:14px;padding:12px 8px;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
-.taste-tools .ic{width:17px;height:17px;color:var(--accent)}
 /* окно, прижатое к верху экрана (для ввода текста: клавиатура его не закрывает) */
 .sheet-bg.top{align-items:flex-start}
 .sheet-bg.top .sheet{border-radius:0 0 22px 22px;border-bottom:1px solid var(--line);border-top:0;padding-top:calc(20px + env(safe-area-inset-top));max-height:100vh}
@@ -415,7 +412,6 @@ details.fold[open] .adm-fold[open]>summary .arr,.adm-fold[open]>summary .arr{tra
     <details class="sec fold" id="tasteBox">
       <summary><h2 id="tasteTitle">Мой вкус</h2></summary>
       <textarea id="profile" style="margin-top:10px" placeholder="Что любите, что не любите, что бросили и почему…"></textarea>
-      <div class="taste-tools" id="tasteTools"></div>
       <button class="btn ghost" id="saveProfile" style="margin-top:8px;width:100%">Сохранить</button>
     </details>
 
