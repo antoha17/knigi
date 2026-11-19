@@ -40,6 +40,7 @@ const P = {
   heart:'<path d="M12 20s-7-4.4-9.2-8.6C1.3 8.5 2.9 5 6.3 5c2 0 3.2 1.1 3.9 2.1L12 9l1.8-1.9C14.5 6.1 15.7 5 17.7 5c3.4 0 5 3.5 3.5 6.4C19 15.6 12 20 12 20z"/>',
   chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
   chev:'<path d="M6 9l6 6 6-6"/>',
+  bag:'<path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
   share:'<path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/>',
   squarePlus:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/>',
   pagemenu:'<rect x="3" y="4" width="7" height="5.5" rx="1.3" fill="currentColor" stroke="none"/><path d="M4 13h12M4 16.5h16M4 20h11"/>',
@@ -268,6 +269,18 @@ function maybeThanksCard(){
 }
 $("#go").onclick=()=>pick(false);
 $("#surprise").onclick=()=>pick(true);
+// Кнопка «Подобрать» прилипает к низу экрана; когда прилипла, под ней фон, чтобы не просвечивали чипы.
+(() => {
+  const bar = document.querySelector("#pick > .btns"); if(!bar) return;
+  const check = () => {
+    const r = bar.getBoundingClientRect(), gap = parseFloat(getComputedStyle(bar).bottom) || 10;
+    bar.classList.toggle("stuck", r.height > 0 && r.bottom >= window.innerHeight - gap - 1);
+  };
+  addEventListener("scroll", check, {passive:true}); addEventListener("resize", check);
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setTimeout(check, 50)));
+  setTimeout(check, 300);
+})();
+
 
 // Значки площадок (простые монограммы в фирменных цветах): ссылка ведёт на поиск по названию.
 const SITES = {
@@ -286,11 +299,14 @@ function links(x, small){
   // Кнопки одной ширины, сеткой по две: значок + название
   const ICO = {lit:"icons/shops/lit.png", cg:"icons/shops/cg.png", oz:"icons/shops/oz.png", ym:"icons/shops/ym.png", ll:"icons/shops/ll.png"};
   const btn = k => { const x = SITES[k]; return `<a class="shop" href="${x.u(q)}" target="_blank" rel="noopener">${ICO[k] ? `<img src="${ICO[k]}" alt="" width="22" height="22">` : `<i style="background:${x.bg};color:${x.fg}">${x.g}</i>`}${x.n}</a>`; };
+  // Магазины спрятаны под «Где купить», чтобы карточка была короче. Рядом сразу отзывы LiveLib.
+  const ll = SITES.ll;
   return `<div class="shops${small?" sm":""}">
-    <div class="lk">Купить</div>
-    <div class="shop-grid">${["lit","cg","oz","ym"].map(btn).join("")}</div>
-    <div class="lk">Отзывы читателей</div>
-    <div class="shop-grid one">${btn("ll")}</div>
+    <div class="shop-grid">
+      <button type="button" class="shop buy" onclick="this.closest('.shops').classList.toggle('open')">${IC("bag")}Где купить${IC("chev",2)}</button>
+      <a class="shop" href="${ll.u(q)}" target="_blank" rel="noopener"><img src="${ICO.ll}" alt="" width="22" height="22">Отзывы LiveLib</a>
+    </div>
+    <div class="shop-grid more">${["lit","cg","oz","ym"].map(btn).join("")}</div>
   </div>`;
 }
 
