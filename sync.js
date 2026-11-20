@@ -116,9 +116,12 @@ const Sync = (() => {
   }
 
   /* ---------- вход по почте и паролю ---------- */
+  // Открыто с рабочего стола (а не в браузере). На iPhone у такого приложения свои данные, приглашение из ссылки сюда не попадает.
+  const fromDesk = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const NO_INVITE_DESK = "Нет аккаунта? Сначала откройте ссылку-приглашение в браузере (Safari или Chrome) и зарегистрируйтесь там. Потом войдите здесь с той же почтой и паролем.";
   function errText(e){
     const m = ((e && e.code || "") + " " + (e && e.message || "")).toLowerCase();
-    if(m.includes("invite_required")) return "Регистрация только по приглашению. Попросите новую ссылку у того, кто дал приложение";
+    if(m.includes("invite_required")) return fromDesk() ? NO_INVITE_DESK : "Регистрация только по приглашению. Попросите новую ссылку у того, кто дал приложение";
     if(m.includes("no_seats")) return "Свободных мест нет. Напишите тому, кто дал вам ссылку";
     if(m.includes("invalid_credentials") || m.includes("invalid login")) return "Неверная почта или пароль";
     if(m.includes("already") || m.includes("user_exists")) return "Такая почта уже зарегистрирована. Нажмите «Войти»";
@@ -142,7 +145,7 @@ const Sync = (() => {
       login: `<p>Войдите или создайте аккаунт. Список будет храниться на сервере и будет одинаковым на телефоне и компьютере.</p>${emailInp}${passInp("current-password","Пароль")}
         <div class="btns"><button class="btn main" id="lgGo">Войти</button></div>
         <div class="lg-links">${invite ? `<button id="lgToSignup">Создать аккаунт</button>` : `<span></span>`}<button id="lgToReset">Забыли пароль?</button></div>
-        ${invite ? "" : `<p class="lg-note">Нет аккаунта? Попросите ссылку-приглашение у того, кто дал вам приложение.</p>`}`,
+        ${invite ? "" : `<p class="lg-note">${fromDesk() ? NO_INVITE_DESK : "Нет аккаунта? Попросите ссылку-приглашение у того, кто дал вам приложение."}</p>`}`,
       signup: `<p>Вас пригласили! Укажите почту и придумайте пароль: не меньше 6 символов. Один аккаунт подходит для обоих приложений: «Что посмотреть» и «Что почитать».</p>${emailInp}${passInp("new-password","Новый пароль")}
         <div class="btns"><button class="btn main" id="lgGo">Создать аккаунт</button></div>
         <div class="lg-links"><button id="lgToLogin">У меня уже есть аккаунт</button></div>`,
