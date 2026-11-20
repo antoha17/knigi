@@ -497,7 +497,7 @@ const Install = (() => {
   const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone===true;
   const SEEN = APP+".installHint";
   window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; if($(".sheet")) show(currentTab); });
-  window.addEventListener("appinstalled", () => { close(); toast("Готово! Приложение на экране"); });
+  window.addEventListener("appinstalled", () => { close(); toast("Готово! Значок на рабочем столе"); });
   let currentTab = isIOS ? "ios" : isAndroid ? "android" : "desktop";
 
   const steps = {
@@ -523,7 +523,7 @@ const Install = (() => {
     currentTab = tab || currentTab;
     const native = deferred && currentTab!=="ios";
     $("#sheet").innerHTML = `<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
-      <h3 id="shTitle">Поставьте приложение на экран</h3>
+      <h3 id="shTitle">Добавьте приложение на рабочий стол</h3>
       <p>Так оно будет открываться одним нажатием, как обычное приложение: без браузера и адресной строки.</p>
       <div class="seg chips">${[["ios","iPhone"],["android","Android"],["desktop","Компьютер"]].map(([k,n])=>`<button class="chip ${k===currentTab?"on":""}" data-os="${k}">${n}</button>`).join("")}</div>
       ${native?`<div class="btns"><button class="btn main" id="shInstall">Установить</button></div><p>Или вручную:</p>`:""}
@@ -541,7 +541,7 @@ const Install = (() => {
     if(standalone()) { $("#howInstall").classList.add("hidden"); return; }
     // Полоска вверху «Подобрать», пока приложение открыто в браузере на телефоне.
     if(isIOS || isAndroid){
-      $("#pick").insertAdjacentHTML("afterbegin", `<button class="install-bar" id="installBar">${IC("squarePlus")}<span>Поставьте приложение на экран телефона</span><b>Как</b></button>`);
+      $("#pick").insertAdjacentHTML("afterbegin", `<button class="install-bar" id="installBar">${IC("squarePlus")}<span>Добавьте значок приложения на рабочий стол</span><b>Как</b></button>`);
       $("#installBar").onclick = () => show();
     }
     let seen = false; try{ seen = !!localStorage.getItem(SEEN); }catch(e){}
